@@ -13,6 +13,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Strictly enforce 6px border radius for all buttons */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn,
+a[role="button"] {
+  border-radius: 6px !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Sora } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
+import OtpBanner from "@/components/OtpBanner";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -21,7 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sora.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-[#f8fafc] text-slate-800 antialiased font-sans">
-        {children}
+        <AuthProvider>
+          <OtpBanner />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
