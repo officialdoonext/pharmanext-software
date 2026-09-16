@@ -14,6 +14,7 @@ import {
   BadgeCheck,
   UserCog,
   Store,
+  Settings,
   ChevronDown,
   LogOut,
   RefreshCw,
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
   { name: "Customer", href: "/customers", icon: Users },
   { name: "Employees", href: "/employees", icon: BadgeCheck },
   { name: "Staff", href: "/staff", icon: UserCog },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function TopNavbar() {
@@ -140,20 +142,35 @@ export default function TopNavbar() {
           })}
         </nav>
 
-        {/* User Profile & Logout on Far Right */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* User Profile, Settings Gear & Logout on Far Right */}
+        <div className="flex items-center gap-2.5 shrink-0">
           <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#581c87] to-purple-600 ring-2 ring-purple-100 flex items-center justify-center text-white text-xs font-bold shadow-xs shrink-0">
-              {user ? user.name.slice(0, 2).toUpperCase() : "SK"}
-            </div>
-            <div className="hidden sm:flex flex-col text-left">
-              <span className="text-xs font-bold text-slate-900 leading-tight">
-                {user?.name || "Siva Krishna"}
-              </span>
-              <span className="text-[11px] font-medium text-slate-400 leading-tight capitalize">
-                {user?.role ? `${user.role} Admin` : "Store Admin"}
-              </span>
-            </div>
+            <Link
+              href="/settings"
+              title="View Store Settings & Profile"
+              className="flex items-center gap-3 group cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#581c87] to-purple-600 ring-2 ring-purple-100 flex items-center justify-center text-white text-xs font-bold shadow-xs shrink-0 group-hover:ring-purple-300 transition-all">
+                {user ? user.name.slice(0, 2).toUpperCase() : "SK"}
+              </div>
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="text-xs font-bold text-slate-900 group-hover:text-[#581c87] leading-tight transition-colors">
+                  {user?.name || "Siva Krishna"}
+                </span>
+                <span className="text-[11px] font-medium text-slate-400 leading-tight capitalize">
+                  {user?.role ? `${user.role} Admin` : "Store Admin"}
+                </span>
+              </div>
+            </Link>
+
+            {/* Direct Settings Gear button */}
+            <Link
+              href="/settings"
+              title="Store Settings & GST"
+              className="p-2 rounded-xl text-slate-400 hover:text-[#581c87] hover:bg-purple-50 transition-colors cursor-pointer"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
 
             {/* Logout button */}
             <button

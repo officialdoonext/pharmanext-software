@@ -74,3 +74,50 @@ textarea:disabled,
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Print optimization for Thermal Receipt and A5 Tax Invoice */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Hide navigation, sidebar, headers, buttons, and UI chrome */
+  header,
+  aside,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Ensure modal backdrop allows seamless printing */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  #thermal-receipt {
+    max-width: 80mm !important;
+    width: 80mm !important;
+    margin: 0 auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2mm !important;
+    font-size: 11px !important;
+  }
+
+  #a5-invoice {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2mm !important;
+  }
+
+  @page {
+    margin: 4mm;
+  }
+}
