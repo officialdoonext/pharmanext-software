@@ -23,6 +23,7 @@ import {
   Sparkles,
   AlertCircle,
   Package,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
@@ -208,6 +209,30 @@ export default function BillingContent() {
 
   const handleRemoveCartItem = (cartItemId: string) => {
     setCartItems((prev) => prev.filter((it) => it.id !== cartItemId));
+  };
+
+  const handleToggleUnitType = (cartItemId: string) => {
+    setCartItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== cartItemId) return it;
+        const med = medicines.find((m) => m.id === it.medicineId);
+        const nextUnitType = it.unitType === "sheet" ? "loose" : "sheet";
+        const count = it.unitsPerSheet || 10;
+        const sheetRate = med
+          ? parseFloat(med.sheetPrice || med.sellingPrice?.replace(/[^0-9.]/g, "") || "0") || 100
+          : it.rate;
+        const unitRate = med
+          ? parseFloat(med.unitPrice || "0") || sheetRate / count
+          : it.rate / count;
+        const newRate = nextUnitType === "sheet" ? sheetRate : unitRate;
+        return {
+          ...it,
+          unitType: nextUnitType,
+          rate: +newRate.toFixed(2),
+          amount: +(it.quantity * newRate).toFixed(2),
+        };
+      })
+    );
   };
 
   const handleClearCart = () => {
@@ -576,25 +601,27 @@ export default function BillingContent() {
                         </div>
                       </div>
 
-                      {/* Quick Add Buttons: Sheet vs Loose */}
-                      <div className="grid grid-cols-2 gap-1.5 pt-1">
+                      {/* Quick Add Buttons: Both Sheet and Loose (with single + each) */}
+                      <div className="grid grid-cols-2 gap-2 pt-1">
                         <button
                           type="button"
                           disabled={isOut}
                           onClick={() => handleAddToCart(med, "sheet")}
-                          className="py-1.5 px-2 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                          className="h-9 px-2.5 rounded-md bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                          title="Add 1 Sheet to bill"
                         >
-                          <Plus className="w-3 h-3" />
-                          <span>+ Sheet</span>
+                          <Plus className="w-3.5 h-3.5 shrink-0" />
+                          <span>Sheet</span>
                         </button>
                         <button
                           type="button"
                           disabled={isOut}
                           onClick={() => handleAddToCart(med, "loose")}
-                          className="py-1.5 px-2 rounded-xl bg-purple-50 hover:bg-purple-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#5E2B9D] border border-purple-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                          className="h-9 px-2.5 rounded-md bg-purple-50 hover:bg-purple-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#5E2B9D] border border-purple-200 text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          title="Add 1 Loose Unit to bill"
                         >
-                          <Plus className="w-3 h-3" />
-                          <span>+ Loose</span>
+                          <Plus className="w-3.5 h-3.5 shrink-0" />
+                          <span>Loose</span>
                         </button>
                       </div>
                     </div>
@@ -610,18 +637,18 @@ export default function BillingContent() {
         {/* ============================================================ */}
         <div className="lg:col-span-5 space-y-4">
           
-          <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-4 sticky top-20">
+          <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3 sticky top-20">
             {/* Cart Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-purple-50 text-[#5E2B9D] border border-purple-100 flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-md bg-purple-50 text-[#5E2B9D] border border-purple-100 flex items-center justify-center shadow-xs">
                   <ShoppingCart className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">
+                  <h3 className="text-sm font-medium text-slate-900">
                     Order Summary
                   </h3>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[10px] text-slate-400">
                     {cartItems.length} items added
                   </span>
                 </div>
@@ -631,7 +658,7 @@ export default function BillingContent() {
                 <button
                   type="button"
                   onClick={handleClearCart}
-                  className="text-[11px] text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] text-rose-500 hover:text-rose-700 font-medium flex items-center gap-1 cursor-pointer"
                 >
                   <Trash2 className="w-3 h-3" />
                   <span>Clear All</span>
@@ -640,9 +667,9 @@ export default function BillingContent() {
             </div>
 
             {/* Customer Details Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs p-3 bg-slate-50/70 rounded-2xl border border-slate-200/70">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs p-2.5 bg-slate-50/70 rounded-md border border-slate-200/70">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                <label className="block text-[10px] font-medium text-slate-500 mb-0.5 flex items-center gap-1">
                   <User className="w-3 h-3" /> Customer Name:
                 </label>
                 <input
@@ -650,12 +677,12 @@ export default function BillingContent() {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Patient Name"
-                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#5E2B9D]"
+                  className="w-full px-2.5 py-1.5 bg-white rounded-md border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#5E2B9D]"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                <label className="block text-[10px] font-medium text-slate-500 mb-0.5 flex items-center gap-1">
                   <Phone className="w-3 h-3" /> Mobile Number:
                 </label>
                 <input
@@ -663,12 +690,12 @@ export default function BillingContent() {
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="Phone (optional)"
-                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D]"
+                  className="w-full px-2.5 py-1.5 bg-white rounded-md border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D]"
                 />
               </div>
 
-              <div className="sm:col-span-2 pt-1">
-                <label className="block text-[10px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+              <div className="sm:col-span-2 pt-0.5">
+                <label className="block text-[10px] font-medium text-slate-500 mb-0.5 flex items-center gap-1">
                   <Stethoscope className="w-3 h-3" /> Prescribing Doctor:
                 </label>
                 <input
@@ -676,32 +703,38 @@ export default function BillingContent() {
                   value={doctorName}
                   onChange={(e) => setDoctorName(e.target.value)}
                   placeholder="Dr. Name / Hospital (optional)"
-                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D]"
+                  className="w-full px-2.5 py-1.5 bg-white rounded-md border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D]"
                 />
               </div>
             </div>
 
             {/* Added Items Table / List */}
-            <div className="border border-slate-200/80 rounded-2xl overflow-hidden max-h-56 overflow-y-auto divide-y divide-slate-100 text-xs">
+            <div className="border border-slate-200/80 rounded-md overflow-hidden max-h-52 overflow-y-auto divide-y divide-slate-100 text-xs">
               {cartItems.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 space-y-1">
-                  <ShoppingCart className="w-6 h-6 mx-auto text-slate-300" />
-                  <p className="text-xs font-semibold">Cart is currently empty</p>
-                  <p className="text-[11px] text-slate-400">
-                    Click + Sheet or + Loose on any medicine on the left to add items.
+                <div className="py-5 px-4 text-center text-slate-400 space-y-1">
+                  <ShoppingCart className="w-5 h-5 mx-auto text-slate-300" />
+                  <p className="text-xs font-medium">Cart is currently empty</p>
+                  <p className="text-[10px] text-slate-400">
+                    Click Sheet or Loose on any medicine on the left to add items.
                   </p>
                 </div>
               ) : (
                 cartItems.map((it) => (
                   <div key={it.id} className="p-3 flex items-center justify-between gap-2 hover:bg-slate-50/50">
                     <div className="flex-1 min-w-0 pr-2">
-                      <h5 className="font-bold text-slate-900 text-xs truncate">
+                      <h5 className="font-medium text-slate-900 text-xs truncate">
                         {it.name}
                       </h5>
                       <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                        <span className="px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 font-semibold">
-                          {it.unitType === "sheet" ? "Full Sheet" : "Loose Tablet"}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleUnitType(it.id)}
+                          className="px-2 py-0.5 rounded bg-purple-50 hover:bg-purple-100 text-[#5E2B9D] border border-purple-200 font-medium cursor-pointer transition-colors flex items-center gap-1"
+                          title="Click to toggle between Sheet and Loose"
+                        >
+                          <span>{it.unitType === "sheet" ? "Full Sheet" : "Loose Tablet"}</span>
+                          <ChevronDown className="w-2.5 h-2.5" />
+                        </button>
                         <span>₹{it.rate.toFixed(2)} ea</span>
                       </div>
                     </div>
@@ -711,32 +744,31 @@ export default function BillingContent() {
                       <button
                         type="button"
                         onClick={() => handleUpdateQty(it.id, -1)}
-                        className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-medium transition-colors cursor-pointer"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="w-6 text-center font-extrabold text-xs text-slate-900">
+                      <span className="w-6 text-center font-medium text-xs text-slate-900">
                         {it.quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleUpdateQty(it.id, 1)}
-                        className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition-colors cursor-pointer"
+                        className="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-medium transition-colors cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
 
                     {/* Amount & Delete */}
-                    <div className="text-right shrink-0 flex items-center gap-2">
-                      <span className="font-extrabold text-slate-900 text-xs w-16">
+                    <div className="text-right shrink-0">
+                      <span className="font-medium text-slate-900 block">
                         ₹{it.amount.toFixed(2)}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveCartItem(it.id)}
-                        className="text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                        title="Remove item"
+                        className="text-slate-400 hover:text-rose-600 transition-colors p-0.5 cursor-pointer mt-0.5"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -746,17 +778,17 @@ export default function BillingContent() {
               )}
             </div>
 
-            {/* Discount & GST Controls */}
-            <div className="p-3 bg-purple-50/40 rounded-2xl border border-purple-100/80 space-y-3 text-xs">
-              {/* Discount Selector */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-700 text-[11px]">Apply Discount:</span>
-                  <div className="inline-flex p-0.5 rounded-lg bg-white border border-purple-200">
+            {/* Discounts, Tax & Totals Breakdown Card */}
+            <div className="p-4 bg-purple-50/40 rounded-2xl border border-purple-100 space-y-3">
+              {/* Discount Section */}
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-slate-700">Discount:</span>
+                  <div className="flex items-center rounded-md border border-purple-200 bg-white overflow-hidden p-0.5">
                     <button
                       type="button"
                       onClick={() => setDiscountType("percent")}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer ${
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-medium cursor-pointer ${
                         discountType === "percent"
                           ? "bg-[#5E2B9D] text-white"
                           : "text-slate-600"
@@ -767,7 +799,7 @@ export default function BillingContent() {
                     <button
                       type="button"
                       onClick={() => setDiscountType("rupees")}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer ${
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-medium cursor-pointer ${
                         discountType === "rupees"
                           ? "bg-[#5E2B9D] text-white"
                           : "text-slate-600"
@@ -786,10 +818,10 @@ export default function BillingContent() {
                     value={discountValue || ""}
                     onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
                     placeholder="0"
-                    className="w-20 px-2.5 py-1 text-right bg-white rounded-lg border border-purple-200 font-bold text-slate-900 text-xs focus:outline-none focus:border-[#5E2B9D]"
+                    className="w-20 px-2.5 py-1 text-right bg-white rounded-md border border-purple-200 font-medium text-slate-900 text-xs focus:outline-none focus:border-[#5E2B9D]"
                   />
                   {discountAmount > 0 && (
-                    <span className="text-[10px] text-rose-600 font-bold">
+                    <span className="text-[10px] text-rose-600 font-medium">
                       (-₹{discountAmount.toFixed(2)})
                     </span>
                   )}
@@ -841,10 +873,10 @@ export default function BillingContent() {
                 )}
 
                 <div className="flex justify-between items-center pt-2 border-t border-purple-200">
-                  <span className="text-xs font-black text-slate-900">
+                  <span className="text-xs font-medium text-slate-900">
                     Grand Total:
                   </span>
-                  <span className="text-xl font-black text-[#5E2B9D]">
+                  <span className="text-xl font-medium text-[#5E2B9D]">
                     ₹{grandTotal.toFixed(2)}
                   </span>
                 </div>
@@ -853,10 +885,10 @@ export default function BillingContent() {
 
             {/* Payment Method Selector */}
             <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-slate-700">
+              <label className="block text-[11px] font-medium text-slate-700">
                 Payment Method:
               </label>
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { id: "UPI", label: "UPI", icon: QrCode },
                   { id: "Cash", label: "Cash", icon: Banknote },
@@ -870,14 +902,14 @@ export default function BillingContent() {
                       key={item.id}
                       type="button"
                       onClick={() => setPaymentMethod(item.id as any)}
-                      className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 border transition-all cursor-pointer ${
+                      className={`h-10 px-3 py-2 rounded-md text-xs font-medium flex items-center justify-center gap-2 border transition-all cursor-pointer ${
                         isSelected
                           ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
                           : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
-                      <span className="text-[11px]">{item.label}</span>
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="text-xs font-medium">{item.label}</span>
                     </button>
                   );
                 })}
