@@ -55,15 +55,25 @@ export default function AddMedicineModal({
   const [imageUrl, setImageUrl] = useState("");
   const [imageEmoji, setImageEmoji] = useState("💊");
 
-  // Inventory & Pricing Details
+  // Inventory, Packaging & Pricing Details
   const [sku, setSku] = useState("MED-" + Math.floor(1000 + Math.random() * 9000));
-  const [unit, setUnit] = useState("Strip of 10");
   const [strength, setStrength] = useState("");
-  const [sellingPrice, setSellingPrice] = useState("");
-  const [costPrice, setCostPrice] = useState("");
-  const [stock, setStock] = useState("");
   const [batchNumber, setBatchNumber] = useState("BAT-" + Math.floor(1000 + Math.random() * 9000));
   const [expiryDate, setExpiryDate] = useState("");
+
+  // Packaging Count per Sheet / Strip (e.g. 10, 15, 20)
+  const [unitsPerSheet, setUnitsPerSheet] = useState("10");
+  const [packagingName, setPackagingName] = useState("Sheet / Strip");
+
+  // Dual Pricing: Sheet Price & Per Medicine Price
+  const [sheetPrice, setSheetPrice] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
+  const [sheetCostPrice, setSheetCostPrice] = useState("");
+  const [unitCostPrice, setUnitCostPrice] = useState("");
+
+  // Dual Stock: No. of Sheets & Loose Units
+  const [sheetsStock, setSheetsStock] = useState("");
+  const [looseStock, setLooseStock] = useState("");
 
   // Inline Quick-Add states
   const [showQuickAddCat, setShowQuickAddCat] = useState(false);
@@ -73,11 +83,74 @@ export default function AddMedicineModal({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Dynamic pricing calculation handlers
+  const handleUnitsPerSheetChange = (newCountStr: string) => {
+    setUnitsPerSheet(newCountStr);
+    const count = Math.max(1, parseFloat(newCountStr) || 1);
+    if (sheetPrice) {
+      const sp = parseFloat(sheetPrice) || 0;
+      setUnitPrice((sp / count).toFixed(2));
+    } else if (unitPrice) {
+      const up = parseFloat(unitPrice) || 0;
+      setSheetPrice((up * count).toFixed(2));
+    }
+    if (sheetCostPrice) {
+      const sc = parseFloat(sheetCostPrice) || 0;
+      setUnitCostPrice((sc / count).toFixed(2));
+    }
+  };
+
+  const handleSheetPriceChange = (val: string) => {
+    setSheetPrice(val);
+    const count = Math.max(1, parseFloat(unitsPerSheet) || 10);
+    if (val && !isNaN(parseFloat(val))) {
+      setUnitPrice((parseFloat(val) / count).toFixed(2));
+    } else {
+      setUnitPrice("");
+    }
+  };
+
+  const handleUnitPriceChange = (val: string) => {
+    setUnitPrice(val);
+    const count = Math.max(1, parseFloat(unitsPerSheet) || 10);
+    if (val && !isNaN(parseFloat(val))) {
+      setSheetPrice((parseFloat(val) * count).toFixed(2));
+    } else {
+      setSheetPrice("");
+    }
+  };
+
+  const handleSheetCostPriceChange = (val: string) => {
+    setSheetCostPrice(val);
+    const count = Math.max(1, parseFloat(unitsPerSheet) || 10);
+    if (val && !isNaN(parseFloat(val))) {
+      setUnitCostPrice((parseFloat(val) / count).toFixed(2));
+    } else {
+      setUnitCostPrice("");
+    }
+  };
+
+  const handleUnitCostPriceChange = (val: string) => {
+    setUnitCostPrice(val);
+    const count = Math.max(1, parseFloat(unitsPerSheet) || 10);
+    if (val && !isNaN(parseFloat(val))) {
+      setSheetCostPrice((parseFloat(val) * count).toFixed(2));
+    } else {
+      setSheetCostPrice("");
+    }
+  };
+
   if (!isOpen) return null;
 
   // Selected Category Object to dynamically get its Subcategories
   const selectedCategoryObj = categories.find((c) => c.name === category);
   const availableSubCategories = selectedCategoryObj?.subCategories || [];
+
+  // Computed total stock units
+  const countPerSheet = Math.max(1, parseInt(unitsPerSheet) || 10);
+  const numSheets = parseInt(sheetsStock) || 0;
+  const numLoose = parseInt(looseStock) || 0;
+  const totalUnits = numSheets * countPerSheet + numLoose;
 
   // Handle File Upload for Medicine Image
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,8 +194,18 @@ export default function AddMedicineModal({
       alert("Please select or enter a Category.");
       return;
     }
+    if (!sheetPrice && !unitPrice) {
+      alert("Please enter a Sheet Price or Per Medicine Price.");
+      return;
+    }
 
-    const currentStockNum = parseFloat(stock || "0");
+    const formattedSheetPrice = sheetPrice
+      ? parseFloat(sheetPrice).toFixed(2)
+      : (parseFloat(unitPrice || "0") * countPerSheet).toFixed(2);
+    const formattedUnitPrice = unitPrice
+      ? parseFloat(unitPrice).toFixed(2)
+      : (parseFloat(sheetPrice || "0") / countPerSheet).toFixed(2);
+
     const newMedicine: MedicineItem = {
       id: sku,
       name: name.trim(),
@@ -137,14 +220,23 @@ export default function AddMedicineModal({
       imageUrl: imageUrl || undefined,
       imageEmoji: imageEmoji || "💊",
       sku,
-      unit: unit.trim() || "Strip",
+      unitsPerSheet: countPerSheet,
+      packagingUnitName: packagingName || "Sheet",
+      sheetPrice: formattedSheetPrice,
+      unitPrice: formattedUnitPrice,
+      sheetCostPrice: sheetCostPrice ? parseFloat(sheetCostPrice).toFixed(2) : undefined,
+      unitCostPrice: unitCostPrice ? parseFloat(unitCostPrice).toFixed(2) : undefined,
+      sellingPrice: `₹ ${formattedSheetPrice} / sheet (₹ ${formattedUnitPrice} / pc)`,
+      costPrice: sheetCostPrice ? `₹ ${parseFloat(sheetCostPrice).toFixed(2)} / sheet` : "₹ 0.00",
+      sheetsStock: numSheets,
+      looseStock: numLoose,
+      totalUnitsStock: totalUnits,
+      stock: `${numSheets} Sheets + ${numLoose} Loose (${totalUnits} Units)`,
+      unit: `${countPerSheet} per ${packagingName || "Sheet"}`,
       strength: strength.trim(),
-      sellingPrice: sellingPrice ? `₹ ${parseFloat(sellingPrice).toFixed(2)}` : "₹ 0.00",
-      costPrice: costPrice ? `₹ ${parseFloat(costPrice).toFixed(2)}` : "₹ 0.00",
-      stock: currentStockNum.toString(),
       batchNumber: batchNumber.trim() || undefined,
       expiryDate: expiryDate.trim() || undefined,
-      status: currentStockNum <= 0 ? "Out of Stock" : currentStockNum <= 15 ? "Low Stock" : "Active",
+      status: totalUnits <= 0 ? "Out of Stock" : totalUnits <= countPerSheet * 2 ? "Low Stock" : "Active",
       addedOn: new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -446,86 +538,252 @@ export default function AddMedicineModal({
               </div>
 
               {/* Section 3: Pricing & Stock Inventory */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+              <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                     <h3 className="text-sm font-bold text-slate-900">
-                      Pricing, Packaging & Inventory
+                      Packing, Pricing & Stock Configuration
                     </h3>
                   </div>
                   <span className="text-[11px] text-slate-400 font-mono">SKU: {sku}</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                  {/* Packaging / Unit */}
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1.5">
-                      Unit / Packaging
-                    </label>
-                    <input
-                      type="text"
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value)}
-                      placeholder="e.g. Strip of 10, Bottle (100ml)"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
-                    />
+                {/* Packaging count per sheet/strip */}
+                <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-800 text-xs">
+                        Packing Count per Sheet / Strip <span className="text-rose-500">*</span>
+                      </label>
+                      <p className="text-[11px] text-slate-500">
+                        How many tablets/capsules/units are in one full sheet/strip?
+                      </p>
+                    </div>
+
+                    {/* Quick Count Selection Chips: 10, 15, 20, 30 */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {["10", "15", "20", "30", "1"].map((cnt) => (
+                        <button
+                          key={cnt}
+                          type="button"
+                          onClick={() => handleUnitsPerSheetChange(cnt)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                            unitsPerSheet === cnt
+                              ? "bg-[#581c87] text-white border-[#581c87] shadow-xs"
+                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          {cnt === "1" ? "1 (Single)" : `${cnt} units`}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* MRP / Selling Price */}
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1.5">
-                      MRP / Selling Price (₹) <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-600 text-[11px] mb-1">
+                        Exact Count per Sheet (e.g. 10, 15, 20)
+                      </label>
                       <input
                         type="number"
-                        step="0.01"
+                        min="1"
                         required
-                        value={sellingPrice}
-                        onChange={(e) => setSellingPrice(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs font-semibold"
+                        value={unitsPerSheet}
+                        onChange={(e) => handleUnitsPerSheetChange(e.target.value)}
+                        placeholder="10"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#581c87] text-slate-900 text-xs font-bold"
                       />
-                      <span className="absolute left-2.5 top-2.5 text-slate-400 font-semibold">₹</span>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-600 text-[11px] mb-1">
+                        Packaging Label
+                      </label>
+                      <select
+                        value={packagingName}
+                        onChange={(e) => setPackagingName(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#581c87] text-slate-800 text-xs font-medium cursor-pointer"
+                      >
+                        <option value="Sheet / Strip">Sheet / Strip</option>
+                        <option value="Box">Box</option>
+                        <option value="Bottle">Bottle</option>
+                        <option value="Blister Pack">Blister Pack</option>
+                        <option value="Vial">Vial</option>
+                        <option value="Tube">Tube</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dual Pricing: Sheet Price & Per Medicine Price */}
+                <div className="p-4 bg-purple-50/40 rounded-2xl border border-purple-100/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Selling Price & Unit Rate
+                      </h4>
+                      <p className="text-[11px] text-purple-700">
+                        Enter Sheet Price or Per Medicine Price — the other calculates automatically!
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-semibold bg-white text-purple-800 px-2 py-0.5 rounded-md border border-purple-200">
+                      1 Sheet = {countPerSheet} Units
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {/* Sheet Price */}
+                    <div className="bg-white p-3 rounded-xl border border-purple-100 shadow-xs">
+                      <label className="block font-bold text-slate-800 mb-1">
+                        Sheet / Strip Price (₹) <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          required
+                          value={sheetPrice}
+                          onChange={(e) => handleSheetPriceChange(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-sm font-bold"
+                        />
+                        <span className="absolute left-2.5 top-2 text-slate-400 font-bold">₹</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        Full pack / strip selling price
+                      </span>
+                    </div>
+
+                    {/* Per Medicine Price */}
+                    <div className="bg-white p-3 rounded-xl border border-purple-100 shadow-xs">
+                      <label className="block font-bold text-slate-800 mb-1">
+                        Per Medicine / Unit Price (₹) <span className="text-rose-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={unitPrice}
+                          onChange={(e) => handleUnitPriceChange(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-sm font-bold"
+                        />
+                        <span className="absolute left-2.5 top-2 text-slate-400 font-bold">₹</span>
+                      </div>
+                      <span className="text-[10px] text-emerald-600 mt-1 block font-medium">
+                        Rate per single tablet / capsule
+                      </span>
+                    </div>
+
+                    {/* Cost Prices */}
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80">
+                      <label className="block font-semibold text-slate-700 mb-1 text-[11px]">
+                        Purchase Cost per Sheet (₹)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={sheetCostPrice}
+                          onChange={(e) => handleSheetCostPriceChange(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#581c87]"
+                        />
+                        <span className="absolute left-2.5 top-1.5 text-slate-400 font-semibold">₹</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/80">
+                      <label className="block font-semibold text-slate-700 mb-1 text-[11px]">
+                        Purchase Cost per Medicine (₹)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={unitCostPrice}
+                          onChange={(e) => handleUnitCostPriceChange(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#581c87]"
+                        />
+                        <span className="absolute left-2.5 top-1.5 text-slate-400 font-semibold">₹</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dual Stock: Sheets & Loose Units */}
+                <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Current Stock Inventory
+                      </h4>
+                      <p className="text-[11px] text-emerald-700">
+                        Record both unopened full sheets and opened loose medicines
+                      </p>
+                    </div>
+                    {/* Live calculated total units badge */}
+                    <div className="text-right">
+                      <span className="text-xs font-extrabold text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-lg border border-emerald-200 inline-block">
+                        Total: {totalUnits} Units
+                      </span>
                     </div>
                   </div>
 
-                  {/* Cost / Purchase Price */}
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1.5">
-                      Purchase Cost (₹)
-                    </label>
-                    <div className="relative">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {/* Full Sheets */}
+                    <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-xs">
+                      <label className="block font-bold text-slate-800 mb-1">
+                        No. of Full Sheets / Strips in Stock
+                      </label>
                       <input
                         type="number"
-                        step="0.01"
-                        value={costPrice}
-                        onChange={(e) => setCostPrice(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full pl-7 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                        min="0"
+                        value={sheetsStock}
+                        onChange={(e) => setSheetsStock(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-600 text-slate-900 text-sm font-bold"
                       />
-                      <span className="absolute left-2.5 top-2.5 text-slate-400 font-semibold">₹</span>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        = {numSheets * countPerSheet} tablets/units
+                      </span>
+                    </div>
+
+                    {/* Loose Medicines */}
+                    <div className="bg-white p-3 rounded-xl border border-emerald-100 shadow-xs">
+                      <label className="block font-bold text-slate-800 mb-1">
+                        Loose Tablets / Units in Stock
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={looseStock}
+                        onChange={(e) => setLooseStock(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-emerald-600 text-slate-900 text-sm font-bold"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        Loose pieces from cut/opened strips
+                      </span>
                     </div>
                   </div>
 
-                  {/* Stock Quantity */}
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1.5">
-                      Opening Stock
-                    </label>
-                    <input
-                      type="number"
-                      value={stock}
-                      onChange={(e) => setStock(e.target.value)}
-                      placeholder="e.g. 100"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs font-semibold"
-                    />
+                  {/* Summary calculation pill */}
+                  <div className="p-2.5 bg-white/90 rounded-xl border border-emerald-200 flex items-center justify-between text-xs text-slate-700">
+                    <span className="text-slate-600 font-medium">
+                      Formula Breakdown:
+                    </span>
+                    <span className="font-bold text-emerald-800 font-mono">
+                      ({numSheets} sheets × {countPerSheet}) + {numLoose} loose = {totalUnits} Total Units
+                    </span>
                   </div>
+                </div>
 
-                  {/* Batch Number */}
-                  <div className="col-span-2">
-                    <label className="block font-semibold text-slate-700 mb-1.5">
+                {/* Batch & Expiry Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
                       Batch Number
                     </label>
                     <input
@@ -537,9 +795,8 @@ export default function AddMedicineModal({
                     />
                   </div>
 
-                  {/* Expiry Date */}
-                  <div className="col-span-2">
-                    <label className="block font-semibold text-slate-700 mb-1.5">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
                       Expiry Date
                     </label>
                     <div className="relative">
@@ -746,10 +1003,13 @@ export default function AddMedicineModal({
                   </div>
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     <span className="px-2 py-0.5 rounded-md bg-purple-50 text-[#581c87] font-semibold text-[10px]">
-                      {medicineType}
+                      {medicineType || "Dosage Form"}
                     </span>
                     <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium text-[10px]">
-                      {category}
+                      {category || "Category"}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold text-[10px]">
+                      {countPerSheet} / {packagingName || "Sheet"}
                     </span>
                     {prescriptionRequired ? (
                       <span className="px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 font-bold text-[10px]">
@@ -761,9 +1021,25 @@ export default function AddMedicineModal({
                       </span>
                     )}
                   </div>
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-slate-700 font-medium text-xs">
-                    <span>MRP: <strong className="text-slate-900 font-bold">₹ {sellingPrice || "0.00"}</strong></span>
-                    <span>Stock: <strong className="text-emerald-700 font-bold">{stock || "0"}</strong></span>
+                  <div className="pt-2 border-t border-slate-100 space-y-1 text-slate-700 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 text-[11px]">Sheet Price:</span>
+                      <strong className="text-slate-900 font-bold">
+                        ₹ {sheetPrice ? parseFloat(sheetPrice).toFixed(2) : "0.00"}
+                      </strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 text-[11px]">Per Medicine:</span>
+                      <strong className="text-purple-700 font-bold">
+                        ₹ {unitPrice ? parseFloat(unitPrice).toFixed(2) : "0.00"} / pc
+                      </strong>
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-50">
+                      <span className="text-slate-500 text-[11px]">Stock Breakdown:</span>
+                      <span className="font-bold text-emerald-700 text-[11px]">
+                        {numSheets} Sheets + {numLoose} Loose ({totalUnits} Units)
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

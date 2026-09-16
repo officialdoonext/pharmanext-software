@@ -387,14 +387,29 @@ export default function ProductsContent() {
     );
   };
 
-  // Inventory Summary Metrics
-  const totalStockCount = medicines.reduce(
-    (acc, m) => acc + (parseFloat(m.stock) || 0),
+  // Inventory Summary Metrics (Dynamic Sheets & Loose calculations)
+  const totalSheetsCount = medicines.reduce(
+    (acc, m) => acc + (m.sheetsStock || 0),
+    0
+  );
+  const totalLooseCount = medicines.reduce(
+    (acc, m) => acc + (m.looseStock || 0),
+    0
+  );
+  const totalUnitsCount = medicines.reduce(
+    (acc, m) => acc + (m.totalUnitsStock ?? (parseFloat(m.stock) || 0)),
     0
   );
   const lowStockCount = medicines.filter((m) => m.status === "Low Stock").length;
   const outOfStockCount = medicines.filter((m) => m.status === "Out of Stock").length;
   const totalValuation = medicines.reduce((acc, m) => {
+    const sPrice = parseFloat(m.sheetPrice || "0");
+    const uPrice = parseFloat(m.unitPrice || "0");
+    const sStock = m.sheetsStock || 0;
+    const lStock = m.looseStock || 0;
+    if (sPrice > 0 || uPrice > 0) {
+      return acc + (sStock * sPrice) + (lStock * uPrice);
+    }
     const qty = parseFloat(m.stock) || 0;
     const price = parseFloat(m.sellingPrice.replace(/[^\d.]/g, "")) || 0;
     return acc + qty * price;
@@ -565,7 +580,7 @@ export default function ProductsContent() {
                   {medicines.length}
                 </h3>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  {totalStockCount} total units in stock
+                  {totalSheetsCount} Sheets + {totalLooseCount} Loose ({totalUnitsCount} Units)
                 </p>
               </div>
             </div>
@@ -784,9 +799,9 @@ export default function ProductsContent() {
                     <th className="py-3 px-3">Category / Sub-Category</th>
                     <th className="py-3 px-3">Brand & Manufacturer</th>
                     <th className="py-3 px-3 text-center">Rx / OTC</th>
-                    <th className="py-3 px-3">Packaging / Unit</th>
-                    <th className="py-3 px-3">Selling Price</th>
-                    <th className="py-3 px-3">Stock & Status</th>
+                    <th className="py-3 px-3">Packing Count</th>
+                    <th className="py-3 px-3">Price (Sheet / Per Med)</th>
+                    <th className="py-3 px-3">Stock (Sheets & Loose)</th>
                     <th className="py-3 px-4 text-center">Action</th>
                   </tr>
                 </thead>
@@ -891,26 +906,37 @@ export default function ProductsContent() {
                           )}
                         </td>
 
-                        {/* Unit / Packaging */}
-                        <td className="py-3.5 px-3 text-slate-600 font-medium">
-                          {prod.unit}
+                        {/* Packing Count */}
+                        <td className="py-3.5 px-3">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-800 text-xs">
+                              {prod.unitsPerSheet ? `${prod.unitsPerSheet} per sheet` : prod.unit}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {prod.packagingUnitName || "Sheet / Strip"}
+                            </span>
+                          </div>
                         </td>
 
-                        {/* Selling Price */}
+                        {/* Selling Price (Sheet Price & Per Medicine Price) */}
                         <td className="py-3.5 px-3">
-                          <span className="font-bold text-slate-900 text-xs">
-                            {prod.sellingPrice}
-                          </span>
-                          <span className="block text-[10px] text-slate-400">
-                            Cost: {prod.costPrice}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-900 text-xs">
+                              ₹ {prod.sheetPrice ? parseFloat(prod.sheetPrice).toFixed(2) : "0.00"}{" "}
+                              <span className="text-[10px] text-slate-500 font-normal">/ sheet</span>
+                            </span>
+                            <span className="text-[11px] font-semibold text-purple-700">
+                              ₹ {prod.unitPrice ? parseFloat(prod.unitPrice).toFixed(2) : "0.00"}{" "}
+                              <span className="text-[10px] text-purple-400 font-normal">/ pc</span>
+                            </span>
+                          </div>
                         </td>
 
-                        {/* Stock & Status Pill */}
+                        {/* Stock (Sheets & Loose Units) & Status Pill */}
                         <td className="py-3.5 px-3">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-0.5">
                             <span
-                              className={`font-bold ${
+                              className={`font-extrabold text-xs ${
                                 isOutOfStock
                                   ? "text-rose-600"
                                   : isLowStock
@@ -918,18 +944,23 @@ export default function ProductsContent() {
                                   : "text-emerald-700"
                               }`}
                             >
-                              {prod.stock} units
+                              {prod.sheetsStock !== undefined && prod.looseStock !== undefined
+                                ? `${prod.sheetsStock} Sheets + ${prod.looseStock} Loose`
+                                : `${prod.stock} units`}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              Total: {prod.totalUnitsStock ?? prod.stock} units
                             </span>
                             {isOutOfStock ? (
-                              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-200 text-center">
+                              <span className="inline-block w-max px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-600 border border-rose-200 mt-0.5">
                                 Out of Stock
                               </span>
                             ) : isLowStock ? (
-                              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-200 text-center">
+                              <span className="inline-block w-max px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-200 mt-0.5">
                                 Low Stock
                               </span>
                             ) : (
-                              <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200 text-center">
+                              <span className="inline-block w-max px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200 mt-0.5">
                                 Active
                               </span>
                             )}
@@ -1136,19 +1167,57 @@ export default function ProductsContent() {
               </div>
             </div>
 
-            {/* Pricing & Stock Details */}
-            <div className="grid grid-cols-3 gap-3 text-xs">
-              <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-center">
-                <span className="text-purple-700 text-[11px] font-medium block">MRP / Selling</span>
-                <span className="font-bold text-slate-900 text-sm">{viewingMedicine.sellingPrice}</span>
+            {/* Packaging, Pricing & Stock Details */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-purple-50/80 border border-purple-100 text-xs">
+                <span className="text-purple-900 font-medium">Packaging Unit:</span>
+                <span className="font-bold text-purple-950 bg-white px-2.5 py-0.5 rounded-lg border border-purple-200">
+                  {viewingMedicine.unitsPerSheet || 1} units per sheet / strip
+                </span>
               </div>
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                <span className="text-slate-500 text-[11px] font-medium block">Purchase Cost</span>
-                <span className="font-bold text-slate-700 text-sm">{viewingMedicine.costPrice}</span>
+
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-slate-500 text-[11px] font-medium block">Sheet MRP Price</span>
+                  <span className="font-bold text-slate-900 text-sm">
+                    ₹{parseFloat(viewingMedicine.sheetPrice || viewingMedicine.sellingPrice?.replace(/[^0-9.]/g, '') || "0").toFixed(2)}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">per full sheet</span>
+                </div>
+                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100">
+                  <span className="text-purple-700 text-[11px] font-medium block">Per Medicine Price</span>
+                  <span className="font-bold text-purple-900 text-sm">
+                    ₹{(
+                      parseFloat(viewingMedicine.unitPrice || "0") ||
+                      (parseFloat(viewingMedicine.sheetPrice || viewingMedicine.sellingPrice?.replace(/[^0-9.]/g, '') || "0") / (viewingMedicine.unitsPerSheet || 1))
+                    ).toFixed(2)}
+                  </span>
+                  <span className="text-[10px] text-purple-500 block mt-0.5">per single unit / tablet</span>
+                </div>
               </div>
-              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
-                <span className="text-emerald-700 text-[11px] font-medium block">Current Stock</span>
-                <span className="font-bold text-emerald-800 text-sm">{viewingMedicine.stock} units</span>
+
+              <div className="grid grid-cols-3 gap-2.5 text-xs">
+                <div className="p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-100 text-center">
+                  <span className="text-emerald-700 text-[11px] font-medium block">Full Sheets</span>
+                  <span className="font-bold text-emerald-900 text-sm">
+                    {viewingMedicine.sheetsStock ?? Math.floor(parseInt(String(viewingMedicine.stock || 0), 10) / (viewingMedicine.unitsPerSheet || 1))}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 block">sheets</span>
+                </div>
+                <div className="p-2.5 bg-amber-50/60 rounded-xl border border-amber-100 text-center">
+                  <span className="text-amber-700 text-[11px] font-medium block">Loose Units</span>
+                  <span className="font-bold text-amber-900 text-sm">
+                    {viewingMedicine.looseStock ?? (parseInt(String(viewingMedicine.stock || 0), 10) % (viewingMedicine.unitsPerSheet || 1))}
+                  </span>
+                  <span className="text-[10px] text-amber-600 block">loose</span>
+                </div>
+                <div className="p-2.5 bg-slate-900 text-white rounded-xl text-center shadow-sm">
+                  <span className="text-slate-300 text-[11px] font-medium block">Total Units</span>
+                  <span className="font-bold text-white text-sm">
+                    {viewingMedicine.totalUnitsStock ?? viewingMedicine.stock ?? 0}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block">total pcs</span>
+                </div>
               </div>
             </div>
 

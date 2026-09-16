@@ -12,13 +12,28 @@ export interface MedicineItem {
   imageUrl?: string; // Medicine Image (URL or data URL)
   imageEmoji?: string; // Fallback icon
 
-  // Inventory & Pricing Details
+  // Packaging & Sheet configuration
+  unitsPerSheet: number; // Count per sheet/strip, e.g. 10, 15, 20
+  packagingUnitName?: string; // e.g. Sheet, Strip, Bottle, Box
+
+  // Pricing (Sheet Price and Per Medicine / Unit Price)
+  sheetPrice: string; // Selling price per Sheet (₹)
+  unitPrice: string; // Selling price per single tablet / medicine (₹)
+  sheetCostPrice?: string; // Purchase cost per Sheet (₹)
+  unitCostPrice?: string; // Purchase cost per single tablet (₹)
+  sellingPrice: string; // General display price
+  costPrice: string; // General display cost
+
+  // Stock (No. of Sheets and Loose units)
+  sheetsStock: number; // Number of full sheets / strips
+  looseStock: number; // Number of loose units
+  totalUnitsStock: number; // (sheetsStock * unitsPerSheet) + looseStock
+  stock: string; // General display stock
+
+  // Inventory & Batch metadata
   sku: string;
-  unit: string; // e.g. Strip (10 Tabs), Bottle (100ml), Vial, Tube
+  unit: string; // e.g. "10 per Sheet"
   strength?: string; // e.g. 500mg, 625mg
-  sellingPrice: string; // MRP / Selling Price
-  costPrice: string;
-  stock: string;
   batchNumber?: string;
   expiryDate?: string;
   status: "Active" | "Out of Stock" | "Low Stock";

@@ -23,6 +23,42 @@ a[role="button"] {
   border-radius: 6px !important;
 }
 
+/* Global Interactive Cursor Pointer: Buttons, Tabs, Dropdowns, Anchors, Labels, etc. */
+button,
+a,
+select,
+option,
+label,
+summary,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+[role="switch"],
+[role="checkbox"],
+[role="radio"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"]::-webkit-file-upload-button,
+.btn,
+.tab,
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+/* Disabled interactive elements */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"],
+.disabled {
+  cursor: not-allowed !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
