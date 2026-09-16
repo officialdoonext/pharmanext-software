@@ -24,6 +24,10 @@ import {
   AlertCircle,
   Package,
   ChevronDown,
+  ChevronsLeft,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRight,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
@@ -146,6 +150,21 @@ export default function BillingContent() {
     });
     return ["All", ...Array.from(set)];
   }, [medicines]);
+
+  const ITEMS_PER_PAGE = 24;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to first page on search or category filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredMedicines.length / ITEMS_PER_PAGE));
+
+  const paginatedMedicines = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredMedicines.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredMedicines, currentPage]);
 
   // 2. Add Item to Cart (Handles Sheet vs Loose Tablet)
   const handleAddToCart = (medicine: MedicineItem, unitType: "sheet" | "loose") => {
@@ -516,8 +535,13 @@ export default function BillingContent() {
           {/* Medicines Grid / Cards */}
           <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3">
             <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold text-slate-700">
+              <span className="text-xs font-medium text-slate-700">
                 Available Medicines ({filteredMedicines.length})
+                {filteredMedicines.length > ITEMS_PER_PAGE && (
+                  <span className="text-slate-400 ml-1.5 font-normal">
+                    • Page {currentPage} of {totalPages} (24 per page)
+                  </span>
+                )}
               </span>
               <span className="text-[11px] text-slate-400">
                 Click Sheet or Loose to add to bill
@@ -538,7 +562,7 @@ export default function BillingContent() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[620px] overflow-y-auto pr-1">
-                {filteredMedicines.map((med) => {
+                {paginatedMedicines.map((med) => {
                   const count = med.unitsPerSheet || 10;
                   const sheetRate = parseFloat(med.sheetPrice || med.sellingPrice?.replace(/[^0-9.]/g, "") || "0") || 100;
                   const unitRate = parseFloat(med.unitPrice || "0") || sheetRate / count;
@@ -627,6 +651,80 @@ export default function BillingContent() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Pagination Controls (24 per page) */}
+            {totalPages > 1 && (
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between select-none">
+                <span className="text-[11px] text-slate-500 font-normal">
+                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredMedicines.length)} of {filteredMedicines.length}
+                </span>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(1)}
+                    title="First page"
+                    className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronsLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    title="Previous page"
+                    className="h-8 px-2.5 rounded-md border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Prev</span>
+                  </button>
+
+                  {/* Page number buttons */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum = i + 1;
+                    if (totalPages > 5 && currentPage > 3) {
+                      pageNum = currentPage - 2 + i;
+                      if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-md text-xs font-medium flex items-center justify-center transition-all cursor-pointer ${
+                          currentPage === pageNum
+                            ? "bg-[#5E2B9D] text-white shadow-xs"
+                            : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    title="Next page"
+                    className="h-8 px-2.5 rounded-md border border-slate-200 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(totalPages)}
+                    title="Last page"
+                    className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <ChevronsRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             )}
           </div>
