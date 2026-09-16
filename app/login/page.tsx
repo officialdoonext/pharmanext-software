@@ -202,13 +202,13 @@ export default function LoginPage() {
 
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-8 text-center z-10">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#3b0764] via-[#581c87] to-[#059669] flex items-center justify-center shadow-lg shadow-purple-500/20 mb-3.5">
-          <div className="grid grid-cols-2 gap-1.5 w-7 h-7 items-center justify-center">
-            <div className="w-2.5 h-2.5 rounded-sm bg-white"></div>
-            <div className="w-2.5 h-2.5 rounded-sm bg-emerald-300"></div>
-            <div className="w-2.5 h-2.5 rounded-sm bg-teal-300"></div>
-            <div className="w-2.5 h-2.5 rounded-sm bg-white"></div>
-          </div>
+        <div className="w-16 h-16 rounded-3xl overflow-hidden shadow-lg shadow-purple-500/15 flex items-center justify-center bg-white border border-slate-200/80 p-2 mb-3.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/doonext-fav.png"
+            alt="PharmaNext Logo"
+            className="w-full h-full object-contain"
+          />
         </div>
 
         <div className="flex items-center text-3xl font-extrabold tracking-tight">

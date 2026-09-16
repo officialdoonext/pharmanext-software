@@ -43,14 +43,13 @@ export default function Sidebar() {
       <div className="flex flex-col flex-1 overflow-y-auto">
         {/* Brand Logo */}
         <div className="p-6 pb-5 flex items-center gap-3">
-          <div className="relative w-10 h-10 flex items-center justify-center">
-            {/* Custom 4-dot / medical plus icon matching the screenshot */}
-            <div className="grid grid-cols-2 gap-1 w-8 h-8 items-center justify-center">
-              <div className="w-3.5 h-3.5 rounded-full bg-emerald-500"></div>
-              <div className="w-3.5 h-3.5 rounded-full bg-blue-500"></div>
-              <div className="w-3.5 h-3.5 rounded-full bg-teal-400"></div>
-              <div className="w-3.5 h-3.5 rounded-full bg-emerald-600"></div>
-            </div>
+          <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-xs flex items-center justify-center bg-white border border-slate-200/80 p-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/doonext-fav.png"
+              alt="PharmaNext Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <div className="flex items-center text-xl font-bold tracking-tight">

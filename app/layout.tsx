@@ -12,6 +12,13 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "PharmaNext - Smart Pharmacy. Healthy Tomorrow.",
   description: "Comprehensive Pharmacy Management Software",
+  icons: {
+    icon: [
+      { url: "/doonext-fav.png", type: "image/png" },
+    ],
+    shortcut: "/doonext-fav.png",
+    apple: "/doonext-fav.png",
+  },
 };
 
 export default function RootLayout({

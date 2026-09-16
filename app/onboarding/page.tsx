@@ -108,13 +108,13 @@ export default function OnboardingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#3b0764] via-[#581c87] to-[#059669] flex items-center justify-center shadow-xs">
-              <div className="grid grid-cols-2 gap-1 w-5 h-5 items-center justify-center">
-                <div className="w-2 h-2 rounded-sm bg-white"></div>
-                <div className="w-2 h-2 rounded-sm bg-emerald-300"></div>
-                <div className="w-2 h-2 rounded-sm bg-teal-300"></div>
-                <div className="w-2 h-2 rounded-sm bg-white"></div>
-              </div>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs flex items-center justify-center bg-white border border-slate-200/80 p-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/doonext-fav.png"
+                alt="PharmaNext Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="flex items-center text-2xl font-black tracking-tight">
               <span className="text-[#3b0764]">Pharma</span>

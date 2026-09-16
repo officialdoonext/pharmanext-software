@@ -48,13 +48,13 @@ export default function TopNavbar() {
         <div className="flex items-center gap-4 shrink-0">
           <Link href="/medicines" className="flex items-center gap-2.5 group">
             {/* Logo Icon */}
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#3b0764] via-[#581c87] to-[#059669] flex items-center justify-center shadow-sm shadow-purple-500/20">
-              <div className="grid grid-cols-2 gap-1 w-5 h-5 items-center justify-center">
-                <div className="w-2 h-2 rounded-sm bg-white"></div>
-                <div className="w-2 h-2 rounded-sm bg-emerald-300"></div>
-                <div className="w-2 h-2 rounded-sm bg-teal-300"></div>
-                <div className="w-2 h-2 rounded-sm bg-white"></div>
-              </div>
+            <div className="w-11 h-11 rounded-2xl overflow-hidden shadow-xs flex items-center justify-center bg-white border border-slate-200/80 p-1 group-hover:scale-105 transition-transform">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/doonext-fav.png"
+                alt="PharmaNext Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             {/* Logo Text */}
             <div className="flex flex-col">
