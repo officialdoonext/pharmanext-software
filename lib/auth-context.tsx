@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, Pharmacy, PendingOtp } from "./types";
+import { User, Pharmacy } from "./types";
 import { useRouter } from "next/navigation";
+import { APP_CONFIG } from "./config";
 
 interface AuthContextType {
   user: User | null;
@@ -10,14 +11,12 @@ interface AuthContextType {
   pharmacies: Pharmacy[];
   isAuthenticated: boolean;
   isLoading: boolean;
-  activeOtpNotification: string | null;
-  sendAdminOtp: (email: string) => Promise<{ success: boolean; message: string; otp?: string }>;
+  sendAdminOtp: (email: string) => Promise<{ success: boolean; message: string }>;
   verifyAdminOtp: (email: string, enteredOtp: string) => Promise<{ success: boolean; message: string }>;
   loginStaff: (storeCode: string, identifier: string, pass: string) => Promise<{ success: boolean; message: string }>;
   addPharmacy: (data: { name: string; address: string; phone?: string; licenseNo?: string }) => Pharmacy;
   togglePharmacyActivation: (pharmacyId: string, days?: number) => void;
   selectPharmacy: (pharmacyId: string) => { success: boolean; reason?: "inactive" | "no_expiry" | "expired" };
-  dismissOtpNotification: () => void;
   logout: () => void;
 }
 
@@ -27,7 +26,6 @@ const STORAGE_KEYS = {
   USER: "pharmanext_user_session",
   CURRENT_PHARMACY: "pharmanext_current_pharmacy",
   PHARMACIES: "pharmanext_pharmacies_list",
-  PENDING_OTP: "pharmanext_pending_otp",
 };
 
 const defaultPharmacies: Pharmacy[] = [
@@ -38,7 +36,7 @@ const defaultPharmacies: Pharmacy[] = [
     phone: "+91 98765 43210",
     licenseNo: "DL-TS-HYD-2024-8842",
     status: "active",
-    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year active
+    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     ownerEmail: "admin@pharmanext.com",
     createdAt: "10 Jan 2026",
   },
@@ -49,7 +47,7 @@ const defaultPharmacies: Pharmacy[] = [
     phone: "+91 98765 99881",
     licenseNo: "DL-TS-HYD-2025-1109",
     status: "inactive",
-    expiryDate: null, // Null expiry and inactive as requested
+    expiryDate: null,
     ownerEmail: "admin@pharmanext.com",
     createdAt: "15 Feb 2026",
   },
@@ -60,7 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [currentPharmacy, setCurrentPharmacy] = useState<Pharmacy | null>(null);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>(defaultPharmacies);
-  const [activeOtpNotification, setActiveOtpNotification] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize state from LocalStorage on client mount
@@ -98,93 +95,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Send OTP to email
-  const sendAdminOtp = async (email: string): Promise<{ success: boolean; message: string; otp?: string }> => {
+  // Securely Send OTP to email via API & Firebase Firestore
+  const sendAdminOtp = async (
+    email: string
+  ): Promise<{ success: boolean; message: string }> => {
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !trimmedEmail.includes("@")) {
       return { success: false, message: "Please provide a valid email address." };
     }
 
-    // Generate secure 6-digit OTP
-    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes validity
-
-    const pendingData: PendingOtp = {
-      email: trimmedEmail,
-      otp: generatedOtp,
-      expiresAt,
-      attempts: 0,
-    };
-
     try {
-      localStorage.setItem(STORAGE_KEYS.PENDING_OTP, JSON.stringify(pendingData));
-    } catch (e) {
-      console.error(e);
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      console.error("Send OTP Network Error:", err);
+      return { success: false, message: "Unable to connect to security server. Please try again." };
     }
-
-    // Set interactive visual alert so the user sees the delivered OTP
-    setActiveOtpNotification(`Security Code for ${trimmedEmail}: ${generatedOtp} (Valid for 5 minutes)`);
-
-    return {
-      success: true,
-      message: `OTP sent successfully to ${trimmedEmail}`,
-      otp: generatedOtp,
-    };
   };
 
-  // Verify OTP
-  const verifyAdminOtp = async (email: string, enteredOtp: string): Promise<{ success: boolean; message: string }> => {
+  // Securely Verify OTP via API & Firebase Firestore
+  const verifyAdminOtp = async (
+    email: string,
+    enteredOtp: string
+  ): Promise<{ success: boolean; message: string }> => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedOtp = enteredOtp.trim();
 
-    const storedPendingStr = localStorage.getItem(STORAGE_KEYS.PENDING_OTP);
-    if (!storedPendingStr) {
-      return { success: false, message: "No active OTP request found. Please request a new code." };
+    if (!trimmedEmail || !trimmedOtp) {
+      return { success: false, message: "Please enter your 6-digit OTP code." };
     }
 
-    const pending: PendingOtp = JSON.parse(storedPendingStr);
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail, otp: trimmedOtp }),
+      });
+      const data = await res.json();
 
-    if (pending.email !== trimmedEmail) {
-      return { success: false, message: "Email mismatch. Please re-enter your email." };
+      if (data.success) {
+        const authenticatedUser: User = {
+          id: "usr_" + Math.random().toString(36).substring(2, 9),
+          email: trimmedEmail,
+          name: trimmedEmail.split("@")[0].toUpperCase().slice(0, 1) + trimmedEmail.split("@")[0].slice(1),
+          role: "admin",
+          phone: "+91 98765 00000",
+        };
+
+        setUser(authenticatedUser);
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authenticatedUser));
+        return { success: true, message: "Authentication successful." };
+      }
+
+      return { success: false, message: data.message || "Invalid verification code." };
+    } catch (err) {
+      console.error("Verify OTP Network Error:", err);
+      return { success: false, message: "Verification encountered a network error. Please try again." };
     }
-
-    if (Date.now() > pending.expiresAt) {
-      localStorage.removeItem(STORAGE_KEYS.PENDING_OTP);
-      setActiveOtpNotification(null);
-      return { success: false, message: "Security OTP has expired. Please request a new code." };
-    }
-
-    if (pending.attempts >= 4) {
-      localStorage.removeItem(STORAGE_KEYS.PENDING_OTP);
-      setActiveOtpNotification(null);
-      return { success: false, message: "Maximum verification attempts exceeded. Please generate a new OTP." };
-    }
-
-    if (pending.otp !== trimmedOtp) {
-      pending.attempts += 1;
-      localStorage.setItem(STORAGE_KEYS.PENDING_OTP, JSON.stringify(pending));
-      return {
-        success: false,
-        message: `Invalid security OTP code. ${4 - pending.attempts} attempts remaining.`,
-      };
-    }
-
-    // Success! Clear pending OTP and create session
-    localStorage.removeItem(STORAGE_KEYS.PENDING_OTP);
-    setActiveOtpNotification(null);
-
-    const authenticatedUser: User = {
-      id: "usr_" + Math.random().toString(36).substring(2, 9),
-      email: trimmedEmail,
-      name: trimmedEmail.split("@")[0].toUpperCase().slice(0, 1) + trimmedEmail.split("@")[0].slice(1),
-      role: "admin",
-      phone: "+91 98765 00000",
-    };
-
-    setUser(authenticatedUser);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(authenticatedUser));
-
-    return { success: true, message: "Authentication successful." };
   };
 
   // Staff Login
@@ -197,7 +169,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: "Please fill in all staff credentials." };
     }
 
-    // Match store code against pharmacies
     const matchedPharmacy = pharmacies.find(
       (p) => p.id.toLowerCase() === storeCode.trim().toLowerCase()
     );
@@ -206,7 +177,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: "Pharmacy Store Code not found. Contact your Store Administrator." };
     }
 
-    // Check staff login
     const staffUser: User = {
       id: "staff_" + Math.random().toString(36).substring(2, 8),
       email: `${identifier.trim().toLowerCase()}@pharmanext.com`,
@@ -218,7 +188,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(staffUser);
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(staffUser));
 
-    // Verify if pharmacy is active
     const canEnter =
       matchedPharmacy.status === "active" &&
       matchedPharmacy.expiryDate !== null &&
@@ -245,9 +214,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       address: data.address.trim(),
       phone: data.phone?.trim() || "+91 91234 56789",
       licenseNo: data.licenseNo?.trim() || "DL-TS-AP-" + Math.floor(1000 + Math.random() * 9000),
-      status: "inactive", // Inactive by default
-      expiryDate: null, // Null expiry by default
-      ownerEmail: user?.email || "admin@pharmanext.com",
+      status: "inactive",
+      expiryDate: null,
+      ownerEmail: user?.email || APP_CONFIG.supportEmail,
       createdAt: new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -261,7 +230,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Toggle pharmacy activation (Admin demo/simulation feature)
-  const togglePharmacyActivation = (pharmacyId: string, days: number = 365) => {
+  const togglePharmacyActivation = (
+    pharmacyId: string,
+    days: number = APP_CONFIG.defaultTrialDays
+  ) => {
     const updated = pharmacies.map((p) => {
       if (p.id === pharmacyId) {
         if (p.status === "active") {
@@ -283,7 +255,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     savePharmacies(updated);
 
-    // If current pharmacy was deactivated, update currentPharmacy as well
     if (currentPharmacy && currentPharmacy.id === pharmacyId) {
       const refreshed = updated.find((p) => p.id === pharmacyId) || null;
       setCurrentPharmacy(refreshed);
@@ -319,10 +290,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const dismissOtpNotification = () => {
-    setActiveOtpNotification(null);
-  };
-
   const logout = () => {
     setUser(null);
     setCurrentPharmacy(null);
@@ -339,14 +306,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pharmacies,
         isAuthenticated: !!user,
         isLoading,
-        activeOtpNotification,
         sendAdminOtp,
         verifyAdminOtp,
         loginStaff,
         addPharmacy,
         togglePharmacyActivation,
         selectPharmacy,
-        dismissOtpNotification,
         logout,
       }}
     >

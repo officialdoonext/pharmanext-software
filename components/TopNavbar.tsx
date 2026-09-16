@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { APP_CONFIG } from "@/lib/config";
 import {
   Home,
   Receipt,
@@ -60,7 +61,7 @@ export default function TopNavbar() {
                 <span className="text-[#059669]">Next</span>
               </div>
               <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase mt-1">
-                Smart Pharmacy POS
+                {APP_CONFIG.appTagline}
               </span>
             </div>
           </Link>

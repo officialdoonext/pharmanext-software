@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { APP_CONFIG } from "@/lib/config";
 import {
   ShieldCheck,
   Mail,
@@ -215,7 +216,7 @@ export default function LoginPage() {
           <span className="text-[#059669]">Next</span>
         </div>
         <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-widest">
-          Secure Pharmacy Management System
+          {APP_CONFIG.appTagline}
         </p>
       </div>
 
