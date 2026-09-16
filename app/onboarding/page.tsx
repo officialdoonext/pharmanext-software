@@ -18,7 +18,6 @@ import {
   AlertTriangle,
   Building2,
   Lock,
-  Sparkles,
 } from "lucide-react";
 import { Pharmacy } from "@/lib/types";
 
@@ -28,7 +27,6 @@ export default function OnboardingPage() {
     user,
     pharmacies,
     addPharmacy,
-    togglePharmacyActivation,
     selectPharmacy,
     logout,
   } = useAuth();
@@ -46,6 +44,21 @@ export default function OnboardingPage() {
     pharmacy: Pharmacy;
     reason: "inactive" | "no_expiry" | "expired";
   } | null>(null);
+
+  // Dynamic pharmacies only - strictly exclude any legacy mock/dummy entries
+  const displayedPharmacies = pharmacies.filter((p) => {
+    if (
+      !p ||
+      p.id === "PHARM-1001" ||
+      p.id === "PHARM-1002" ||
+      p.name?.toLowerCase().includes("medlife") ||
+      p.name?.toLowerCase().includes("greencross")
+    ) {
+      return false;
+    }
+    if (!user?.email) return true;
+    return !p.ownerEmail || p.ownerEmail.toLowerCase() === user.email.toLowerCase();
+  });
 
   // Handle Add Pharmacy Submit
   const handleCreatePharmacy = (e: React.FormEvent) => {
@@ -166,24 +179,25 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        {/* Pharmacy Cards List */}
-        {pharmacies.length === 0 ? (
+        {/* Dynamic Pharmacy Cards List */}
+        {displayedPharmacies.length === 0 ? (
           <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center max-w-md mx-auto">
             <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-900">No Pharmacy Stores Found</h3>
             <p className="text-xs text-slate-500 mt-1 mb-6">
-              You do not have any registered pharmacies under this account.
+              You do not have any registered pharmacies under this account. Click below to add your first real pharmacy.
             </p>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-[#581c87] text-white font-bold text-xs shadow-sm hover:bg-[#431c8c]"
+              className="px-5 py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs shadow-sm cursor-pointer inline-flex items-center gap-2"
             >
-              Register Your First Pharmacy
+              <Plus className="w-4 h-4" />
+              <span>Register Your First Pharmacy</span>
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pharmacies.map((pharm) => {
+            {displayedPharmacies.map((pharm) => {
               const isExpired =
                 !pharm.expiryDate || new Date(pharm.expiryDate) <= new Date();
               const canAccess = pharm.status === "active" && !isExpired;
@@ -283,7 +297,7 @@ export default function OnboardingPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="mt-5 space-y-2.5">
+                  <div className="mt-5">
                     {/* Enter Software Button */}
                     <button
                       type="button"
@@ -306,24 +320,6 @@ export default function OnboardingPage() {
                         </>
                       )}
                     </button>
-
-                    {/* Admin Test/Simulation Toggle */}
-                    <div className="flex items-center justify-between text-[11px] pt-1">
-                      <span className="text-slate-400 font-medium">Admin Switch:</span>
-                      <button
-                        type="button"
-                        onClick={() => togglePharmacyActivation(pharm.id)}
-                        className={`text-[11px] font-bold underline cursor-pointer transition-colors ${
-                          pharm.status === "active"
-                            ? "text-rose-600 hover:text-rose-700"
-                            : "text-[#581c87] hover:text-[#431c8c]"
-                        }`}
-                      >
-                        {pharm.status === "active"
-                          ? "Set Inactive (Expiry: null)"
-                          : "Activate (1 Year Subscription)"}
-                      </button>
-                    </div>
                   </div>
                 </div>
               );
@@ -475,31 +471,18 @@ export default function OnboardingPage() {
                     : "null (Not Set)"}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 pt-2 border-t border-slate-200 leading-relaxed">
-                As per system security policies, access to software pages (billing, medicines,
-                sales, records) is prohibited until the pharmacy subscription is activated.
-              </p>
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed text-left mt-3">
+                <strong>Administrative Notice:</strong> This store is awaiting manual verification and subscription activation by the administrator. Once activated manually, you will be able to enter the software.
+              </div>
             </div>
 
             <div className="space-y-2.5">
               <button
                 type="button"
-                onClick={() => {
-                  togglePharmacyActivation(deniedModalData.pharmacy.id);
-                  setDeniedModalData(null);
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Activate Store Now (1 Year Subscription)</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setDeniedModalData(null)}
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold text-xs transition-colors cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center cursor-pointer"
               >
-                Close Notice
+                Understood
               </button>
             </div>
           </div>

@@ -5,6 +5,9 @@ import { User, Pharmacy } from "./types";
 import { useRouter } from "next/navigation";
 import { APP_CONFIG } from "./config";
 
+import { db } from "./firebase";
+import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
+
 interface AuthContextType {
   user: User | null;
   currentPharmacy: Pharmacy | null;
@@ -28,61 +31,113 @@ const STORAGE_KEYS = {
   PHARMACIES: "pharmanext_pharmacies_list",
 };
 
-const defaultPharmacies: Pharmacy[] = [
-  {
-    id: "PHARM-1001",
-    name: "MedLife Healthcare & Chemist",
-    address: "Plot 42, Road No 10, Banjara Hills, Hyderabad",
-    phone: "+91 98765 43210",
-    licenseNo: "DL-TS-HYD-2024-8842",
-    status: "active",
-    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-    ownerEmail: "admin@pharmanext.com",
-    createdAt: "10 Jan 2026",
-  },
-  {
-    id: "PHARM-1002",
-    name: "GreenCross Pharmacy (Branch 2)",
-    address: "Shop 4, Market Complex, Jubilee Hills, Hyderabad",
-    phone: "+91 98765 99881",
-    licenseNo: "DL-TS-HYD-2025-1109",
-    status: "inactive",
-    expiryDate: null,
-    ownerEmail: "admin@pharmanext.com",
-    createdAt: "15 Feb 2026",
-  },
-];
+// No hardcoded mock/dummy pharmacies - clean dynamic data only
+const defaultPharmacies: Pharmacy[] = [];
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [currentPharmacy, setCurrentPharmacy] = useState<Pharmacy | null>(null);
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>(defaultPharmacies);
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize state from LocalStorage on client mount
+  // Initialize dynamic state from LocalStorage & Firestore on client mount
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
-      const savedCurrentPharmacy = localStorage.getItem(STORAGE_KEYS.CURRENT_PHARMACY);
-      const savedPharmacies = localStorage.getItem(STORAGE_KEYS.PHARMACIES);
+    async function initSessionAndPharmacies() {
+      try {
+        const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
+        const savedCurrentPharmacy = localStorage.getItem(STORAGE_KEYS.CURRENT_PHARMACY);
+        const savedPharmacies = localStorage.getItem(STORAGE_KEYS.PHARMACIES);
 
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+        if (savedUser) {
+          setUser(JSON.parse(savedUser));
+        }
+
+        let localCleanPharmacies: Pharmacy[] = [];
+        if (savedPharmacies) {
+          try {
+            const parsed = JSON.parse(savedPharmacies);
+            // Strictly purge any legacy dummy entries (PHARM-1001, PHARM-1002, MedLife, GreenCross)
+            localCleanPharmacies = Array.isArray(parsed)
+              ? parsed.filter(
+                  (p: Pharmacy) =>
+                    p &&
+                    p.id !== "PHARM-1001" &&
+                    p.id !== "PHARM-1002" &&
+                    !p.name?.toLowerCase().includes("medlife") &&
+                    !p.name?.toLowerCase().includes("greencross")
+                )
+              : [];
+          } catch {
+            localCleanPharmacies = [];
+          }
+        }
+
+        setPharmacies(localCleanPharmacies);
+        localStorage.setItem(STORAGE_KEYS.PHARMACIES, JSON.stringify(localCleanPharmacies));
+
+        // Purge dummy current pharmacy if it was previously selected
+        if (savedCurrentPharmacy) {
+          try {
+            const parsedCurrent = JSON.parse(savedCurrentPharmacy);
+            if (
+              !parsedCurrent ||
+              parsedCurrent.id === "PHARM-1001" ||
+              parsedCurrent.id === "PHARM-1002" ||
+              parsedCurrent.name?.toLowerCase().includes("medlife") ||
+              parsedCurrent.name?.toLowerCase().includes("greencross")
+            ) {
+              setCurrentPharmacy(null);
+              localStorage.removeItem(STORAGE_KEYS.CURRENT_PHARMACY);
+            } else {
+              setCurrentPharmacy(parsedCurrent);
+            }
+          } catch {
+            setCurrentPharmacy(null);
+          }
+        }
+
+        // Asynchronously fetch real dynamic pharmacies from Firestore
+        try {
+          const snapshot = await getDocs(collection(db, "pharmacies"));
+          if (!snapshot.empty) {
+            const firestoreList: Pharmacy[] = [];
+            snapshot.forEach((docSnap) => {
+              const item = docSnap.data() as Pharmacy;
+              if (
+                item &&
+                item.id !== "PHARM-1001" &&
+                item.id !== "PHARM-1002" &&
+                !item.name?.toLowerCase().includes("medlife") &&
+                !item.name?.toLowerCase().includes("greencross")
+              ) {
+                firestoreList.push(item);
+              }
+            });
+
+            if (firestoreList.length > 0) {
+              // Merge with local list avoiding duplicates
+              const combined = [...firestoreList];
+              for (const localItem of localCleanPharmacies) {
+                if (!combined.some((c) => c.id === localItem.id)) {
+                  combined.push(localItem);
+                }
+              }
+              setPharmacies(combined);
+              localStorage.setItem(STORAGE_KEYS.PHARMACIES, JSON.stringify(combined));
+            }
+          }
+        } catch (firestoreErr) {
+          // Firestore offline or rules restricted - smoothly continue with clean local data
+        }
+      } catch (e) {
+        console.error("Failed to restore session from storage", e);
+      } finally {
+        setIsLoading(false);
       }
-      if (savedPharmacies) {
-        setPharmacies(JSON.parse(savedPharmacies));
-      } else {
-        localStorage.setItem(STORAGE_KEYS.PHARMACIES, JSON.stringify(defaultPharmacies));
-      }
-      if (savedCurrentPharmacy) {
-        setCurrentPharmacy(JSON.parse(savedCurrentPharmacy));
-      }
-    } catch (e) {
-      console.error("Failed to restore session from storage", e);
-    } finally {
-      setIsLoading(false);
     }
+
+    initSessionAndPharmacies();
   }, []);
 
   // Update storage when pharmacies change
@@ -216,7 +271,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       licenseNo: data.licenseNo?.trim() || "DL-TS-AP-" + Math.floor(1000 + Math.random() * 9000),
       status: "inactive",
       expiryDate: null,
-      ownerEmail: user?.email || APP_CONFIG.supportEmail,
+      ownerEmail: user?.email || "admin@pharmanext.com",
       createdAt: new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -226,6 +281,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const updated = [newPharmacy, ...pharmacies];
     savePharmacies(updated);
+
+    // Dynamic Cloud sync to Firestore
+    setDoc(doc(db, "pharmacies", newPharmacy.id), newPharmacy).catch((err) => {
+      console.warn("Firestore save notice:", err?.message || err);
+    });
+
     return newPharmacy;
   };
 
@@ -234,20 +295,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     pharmacyId: string,
     days: number = APP_CONFIG.defaultTrialDays
   ) => {
+    let updatedTarget: Pharmacy | null = null;
     const updated = pharmacies.map((p) => {
       if (p.id === pharmacyId) {
         if (p.status === "active") {
-          return {
+          updatedTarget = {
             ...p,
             status: "inactive" as const,
             expiryDate: null,
           };
+          return updatedTarget;
         } else {
-          return {
+          updatedTarget = {
             ...p,
             status: "active" as const,
             expiryDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
           };
+          return updatedTarget;
         }
       }
       return p;
@@ -261,6 +325,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (refreshed) {
         localStorage.setItem(STORAGE_KEYS.CURRENT_PHARMACY, JSON.stringify(refreshed));
       }
+    }
+
+    // Dynamic Cloud sync update to Firestore
+    if (updatedTarget) {
+      updateDoc(doc(db, "pharmacies", pharmacyId), {
+        status: (updatedTarget as Pharmacy).status,
+        expiryDate: (updatedTarget as Pharmacy).expiryDate,
+      }).catch((err) => {
+        console.warn("Firestore update notice:", err?.message || err);
+      });
     }
   };
 
