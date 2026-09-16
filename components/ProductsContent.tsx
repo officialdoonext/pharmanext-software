@@ -26,8 +26,11 @@ import {
   FileText,
   Calendar,
   Package,
+  FileSpreadsheet,
+  UploadCloud,
 } from "lucide-react";
 import AddMedicineModal from "./AddMedicineModal";
+import BulkUploadModal from "./BulkUploadModal";
 import CategoryManagerTab from "./CategoryManagerTab";
 import MedicineTypeManagerTab from "./MedicineTypeManagerTab";
 import {
@@ -102,6 +105,7 @@ export default function ProductsContent() {
   const [activeTab, setActiveTab] = useState<"all" | "active" | "inactive">("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -337,6 +341,80 @@ export default function ProductsContent() {
     }
   };
 
+  // Bulk Import Handler (Processes medicines, creates new categories and types automatically)
+  const handleBulkImport = async ({
+    medicines: newMeds,
+    newCategories: newCats,
+    newTypes: newTypes,
+  }: {
+    medicines: MedicineItem[];
+    newCategories: MedicineCategory[];
+    newTypes: MedicineTypeOption[];
+  }) => {
+    // 1. Sync any newly created categories
+    if (newCats.length > 0) {
+      setCategories((prev) => {
+        const merged = [...newCats, ...prev];
+        try {
+          localStorage.setItem("pharmacynext_categories", JSON.stringify(merged));
+        } catch {}
+        return merged;
+      });
+      for (const cat of newCats) {
+        try {
+          await setDoc(doc(db, "categories", cat.id), cat);
+        } catch (e) {
+          console.warn("Category sync error:", e);
+        }
+      }
+    }
+
+    // 2. Sync any newly created medicine types
+    if (newTypes.length > 0) {
+      setMedicineTypes((prev) => {
+        const merged = [...newTypes, ...prev];
+        try {
+          localStorage.setItem("pharmacynext_types", JSON.stringify(merged));
+        } catch {}
+        return merged;
+      });
+      for (const t of newTypes) {
+        try {
+          await setDoc(doc(db, "medicine_types", t.id), t);
+        } catch (e) {
+          console.warn("Type sync error:", e);
+        }
+      }
+    }
+
+    // 3. Sync all imported medicines with store ID
+    if (newMeds.length > 0) {
+      const medsWithStore: MedicineItem[] = newMeds.map((m) => ({
+        ...m,
+        pharmacyId: currentPharmacy?.id || undefined,
+      }));
+
+      setMedicines((prev) => {
+        const merged = [...medsWithStore, ...prev];
+        try {
+          localStorage.setItem("pharmacynext_medicines", JSON.stringify(merged));
+        } catch {}
+        return merged;
+      });
+
+      // Save medicines in background
+      (async () => {
+        for (const m of medsWithStore) {
+          try {
+            await setDoc(doc(db, "medicines", m.id), m);
+          } catch (e) {
+            console.warn("Medicine sync error:", e);
+          }
+        }
+      })();
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this medicine record?")) {
       const updated = medicines.filter((p) => p.id !== id);
@@ -463,6 +541,17 @@ export default function ProductsContent() {
               </button>
             </>
           )}
+
+          {/* Bulk Upload Button */}
+          <button
+            type="button"
+            onClick={() => setIsBulkUploadOpen(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-xs transition-all cursor-pointer"
+            title="Bulk Upload Medicines via Excel or CSV"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Bulk Upload</span>
+          </button>
 
           {/* + Add Medicine Button (Triggers Fullscreen Modal) */}
           <button
@@ -1025,13 +1114,20 @@ export default function ProductsContent() {
                               : "Your medicine catalog is clean and empty. Click below to add your first real pharmaceutical product."}
                           </p>
                           {!isLoadingMedicines && !searchQuery && filterCategory === "All" && filterType === "All" && filterRx === "All" && (
-                            <div className="pt-2">
+                            <div className="pt-2 flex items-center justify-center gap-3 flex-wrap">
                               <button
                                 onClick={() => setIsAddModalOpen(true)}
                                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#581c87] hover:bg-[#431c8c] text-white shadow-sm transition-all cursor-pointer"
                               >
                                 <Plus className="w-4 h-4" />
                                 <span>Add First Medicine</span>
+                              </button>
+                              <button
+                                onClick={() => setIsBulkUploadOpen(true)}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 shadow-xs transition-all cursor-pointer"
+                              >
+                                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                                <span>Bulk Upload Excel</span>
                               </button>
                             </div>
                           )}
@@ -1099,6 +1195,15 @@ export default function ProductsContent() {
         medicineTypes={medicineTypes}
         onQuickAddCategory={handleQuickAddCategory}
         onQuickAddType={handleQuickAddType}
+      />
+
+      {/* Bulk Upload Modal (Excel / CSV with 200 Sample file download & auto-creation) */}
+      <BulkUploadModal
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+        existingCategories={categories}
+        existingTypes={medicineTypes}
+        onBulkImport={handleBulkImport}
       />
 
       {/* Detailed Medicine View Modal */}
