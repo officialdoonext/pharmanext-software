@@ -95,7 +95,7 @@ export default function CategoryManagerTab({
   return (
     <div className="space-y-6">
       {/* Top Header Card */}
-      <div className="bg-gradient-to-r from-[#1e1b4b] via-[#3b0764] to-[#581c87] rounded-3xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-[#1e1b4b] via-[#5E2B9D] to-[#5E2B9D] rounded-3xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
@@ -131,7 +131,7 @@ export default function CategoryManagerTab({
         <div className="lg:col-span-4">
           <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs sticky top-24 space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#581c87]"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#5E2B9D]"></span>
               <h3 className="text-sm font-bold text-slate-900">
                 + Create New Category
               </h3>
@@ -148,7 +148,7 @@ export default function CategoryManagerTab({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Ophthalmology, Nephrology, Oncology"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-xs font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs font-medium"
                 />
               </div>
 
@@ -161,7 +161,7 @@ export default function CategoryManagerTab({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Brief clinical purpose or therapeutic description"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs resize-none"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs resize-none"
                 />
               </div>
 
@@ -174,7 +174,7 @@ export default function CategoryManagerTab({
                   value={subCategoriesInput}
                   onChange={(e) => setSubCategoriesInput(e.target.value)}
                   placeholder="e.g. Beta Blockers, ARBs, Statins"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                 />
                 <span className="text-[10px] text-slate-400 mt-1 block">
                   Separate multiple subcategories with commas
@@ -203,7 +203,7 @@ export default function CategoryManagerTab({
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs shadow-md shadow-purple-900/10 flex items-center justify-center gap-2 transition-all mt-2"
+                className="w-full py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs shadow-md shadow-purple-900/10 flex items-center justify-center gap-2 transition-all mt-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Save Category</span>
@@ -264,7 +264,7 @@ export default function CategoryManagerTab({
                       <button
                         type="button"
                         onClick={() => setActiveAddingSubId(activeAddingSubId === cat.id ? null : cat.id)}
-                        className="text-xs text-[#581c87] hover:bg-purple-50 font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 border border-purple-200"
+                        className="text-xs text-[#5E2B9D] hover:bg-purple-50 font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 border border-purple-200"
                       >
                         <Plus className="w-3.5 h-3.5" />
                         <span>Add Sub Category</span>
@@ -311,7 +311,7 @@ export default function CategoryManagerTab({
                       <button
                         type="button"
                         onClick={() => handleInlineAddSub(cat.id)}
-                        className="px-3 py-1.5 rounded-lg bg-[#581c87] text-white text-xs font-semibold shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-[#5E2B9D] text-white text-xs font-semibold shrink-0"
                       >
                         Add
                       </button>

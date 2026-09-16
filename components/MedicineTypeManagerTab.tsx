@@ -117,7 +117,7 @@ export default function MedicineTypeManagerTab({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Inhaler, Suppository, Spray, Gel"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-xs font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs font-medium"
                 />
               </div>
 
@@ -130,7 +130,7 @@ export default function MedicineTypeManagerTab({
                   value={defaultUnit}
                   onChange={(e) => setDefaultUnit(e.target.value)}
                   placeholder="e.g. Canister, Strip, Bottle, Box"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                 />
               </div>
 
@@ -143,7 +143,7 @@ export default function MedicineTypeManagerTab({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Metered-dose inhaler for oral inhalation route"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs resize-none"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs resize-none"
                 />
               </div>
 
@@ -159,7 +159,7 @@ export default function MedicineTypeManagerTab({
                       onClick={() => setIconTag(emo)}
                       className={`w-8 h-8 rounded-xl text-sm flex items-center justify-center border transition-all ${
                         iconTag === emo
-                          ? "bg-purple-100 border-[#581c87] scale-110 shadow-xs"
+                          ? "bg-purple-100 border-[#5E2B9D] scale-110 shadow-xs"
                           : "bg-slate-50 border-slate-200 hover:bg-slate-100"
                       }`}
                     >
@@ -171,7 +171,7 @@ export default function MedicineTypeManagerTab({
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs shadow-md shadow-purple-900/10 flex items-center justify-center gap-2 transition-all mt-2"
+                className="w-full py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs shadow-md shadow-purple-900/10 flex items-center justify-center gap-2 transition-all mt-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Save Medicine Type</span>
@@ -250,7 +250,7 @@ export default function MedicineTypeManagerTab({
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                     <span className="text-slate-500 font-medium">Linked Inventory</span>
-                    <span className="font-bold text-[#581c87] bg-purple-50 px-2 py-0.5 rounded-md">
+                    <span className="font-bold text-[#5E2B9D] bg-purple-50 px-2 py-0.5 rounded-md">
                       {medicinesWithThisType.length} Items
                     </span>
                   </div>

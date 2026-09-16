@@ -502,7 +502,7 @@ export default function ProductsContent() {
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Medicines & Pharmacy Catalog
             </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#581c87] border border-purple-200">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#5E2B9D] border border-purple-200">
               {medicines.length} Medicines
             </span>
           </div>
@@ -520,14 +520,14 @@ export default function ProductsContent() {
                 onClick={() => setShowFilterDrawer(!showFilterDrawer)}
                 className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-colors ${
                   showFilterDrawer
-                    ? "bg-purple-50 text-[#581c87] border-purple-200"
+                    ? "bg-purple-50 text-[#5E2B9D] border-purple-200"
                     : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                 }`}
               >
                 <Filter className="w-3.5 h-3.5" />
                 <span>Filters</span>
                 {(filterCategory !== "All" || filterType !== "All" || filterRx !== "All") && (
-                  <span className="w-2 h-2 rounded-full bg-[#581c87]"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#5E2B9D]"></span>
                 )}
               </button>
 
@@ -556,7 +556,7 @@ export default function ProductsContent() {
           {/* + Add Medicine Button (Triggers Fullscreen Modal) */}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#581c87] hover:bg-[#431c8c] text-white shadow-md shadow-purple-900/20 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#5E2B9D] hover:bg-[#4D2382] text-white shadow-md shadow-purple-900/20 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Medicine</span>
@@ -570,7 +570,7 @@ export default function ProductsContent() {
           onClick={() => setMainTab("inventory")}
           className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
             mainTab === "inventory"
-              ? "bg-[#581c87] text-white shadow-sm"
+              ? "bg-[#5E2B9D] text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -591,7 +591,7 @@ export default function ProductsContent() {
           onClick={() => setMainTab("categories")}
           className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
             mainTab === "categories"
-              ? "bg-[#581c87] text-white shadow-sm"
+              ? "bg-[#5E2B9D] text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -612,7 +612,7 @@ export default function ProductsContent() {
           onClick={() => setMainTab("types")}
           className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
             mainTab === "types"
-              ? "bg-[#581c87] text-white shadow-sm"
+              ? "bg-[#5E2B9D] text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           }`}
         >
@@ -732,7 +732,7 @@ export default function ProductsContent() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by Medicine Name, Salt / Generic, Brand, Manufacturer, or SKU..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-xs text-slate-800"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-xs text-slate-800"
                 />
                 {searchQuery && (
                   <button
@@ -786,7 +786,7 @@ export default function ProductsContent() {
                   <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] bg-white text-slate-800"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] bg-white text-slate-800"
                   >
                     <option value="All">All Categories ({categories.length})</option>
                     {categories.map((c) => (
@@ -804,7 +804,7 @@ export default function ProductsContent() {
                   <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] bg-white text-slate-800"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] bg-white text-slate-800"
                   >
                     <option value="All">All Types ({medicineTypes.length})</option>
                     {medicineTypes.map((t) => (
@@ -828,7 +828,7 @@ export default function ProductsContent() {
                   onClick={() => setActiveTab("all")}
                   className={`text-xs font-semibold pb-3 border-b-2 transition-colors relative ${
                     activeTab === "all"
-                      ? "border-[#581c87] text-[#581c87]"
+                      ? "border-[#5E2B9D] text-[#5E2B9D]"
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
@@ -838,7 +838,7 @@ export default function ProductsContent() {
                   onClick={() => setActiveTab("active")}
                   className={`text-xs font-semibold pb-3 border-b-2 transition-colors relative ${
                     activeTab === "active"
-                      ? "border-[#581c87] text-[#581c87]"
+                      ? "border-[#5E2B9D] text-[#5E2B9D]"
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
@@ -848,7 +848,7 @@ export default function ProductsContent() {
                   onClick={() => setActiveTab("inactive")}
                   className={`text-xs font-semibold pb-3 border-b-2 transition-colors relative ${
                     activeTab === "inactive"
-                      ? "border-[#581c87] text-[#581c87]"
+                      ? "border-[#5E2B9D] text-[#5E2B9D]"
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
@@ -875,7 +875,7 @@ export default function ProductsContent() {
                           filteredProducts.length > 0
                         }
                         onChange={toggleSelectAll}
-                        className="w-4 h-4 rounded border-slate-300 text-[#581c87] focus:ring-[#581c87]"
+                        className="w-4 h-4 rounded border-slate-300 text-[#5E2B9D] focus:ring-[#5E2B9D]"
                       />
                     </th>
                     <th className="py-3 px-3">
@@ -914,7 +914,7 @@ export default function ProductsContent() {
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelectOne(prod.id)}
-                            className="w-4 h-4 rounded border-slate-300 text-[#581c87] focus:ring-[#581c87]"
+                            className="w-4 h-4 rounded border-slate-300 text-[#5E2B9D] focus:ring-[#5E2B9D]"
                           />
                         </td>
 
@@ -936,7 +936,7 @@ export default function ProductsContent() {
                             <div className="flex flex-col">
                               <span
                                 onClick={() => setViewingMedicine(prod)}
-                                className="font-bold text-slate-900 hover:text-[#581c87] cursor-pointer"
+                                className="font-bold text-slate-900 hover:text-[#5E2B9D] cursor-pointer"
                               >
                                 {prod.name}
                               </span>
@@ -1096,7 +1096,7 @@ export default function ProductsContent() {
                     <tr>
                       <td colSpan={10} className="py-16 text-center text-slate-500">
                         <div className="max-w-md mx-auto space-y-3">
-                          <div className="w-14 h-14 rounded-2xl bg-purple-50 text-[#581c87] border border-purple-100 flex items-center justify-center mx-auto shadow-xs">
+                          <div className="w-14 h-14 rounded-2xl bg-purple-50 text-[#5E2B9D] border border-purple-100 flex items-center justify-center mx-auto shadow-xs">
                             <Pill className="w-7 h-7" />
                           </div>
                           <h4 className="text-base font-bold text-slate-800">
@@ -1117,7 +1117,7 @@ export default function ProductsContent() {
                             <div className="pt-2 flex items-center justify-center gap-3 flex-wrap">
                               <button
                                 onClick={() => setIsAddModalOpen(true)}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#581c87] hover:bg-[#431c8c] text-white shadow-sm transition-all cursor-pointer"
+                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-[#5E2B9D] hover:bg-[#4D2382] text-white shadow-sm transition-all cursor-pointer"
                               >
                                 <Plus className="w-4 h-4" />
                                 <span>Add First Medicine</span>
@@ -1161,7 +1161,7 @@ export default function ProductsContent() {
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  className="w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center bg-[#581c87] text-white shadow-xs"
+                  className="w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center bg-[#5E2B9D] text-white shadow-xs"
                 >
                   1
                 </button>

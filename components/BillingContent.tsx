@@ -420,7 +420,7 @@ export default function BillingContent() {
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Pharmacy Billing &amp; Point of Sale
             </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#581c87] border border-purple-200">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#5E2B9D] border border-purple-200">
               Live Counter
             </span>
           </div>
@@ -430,7 +430,7 @@ export default function BillingContent() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-50 text-[#581c87] border border-purple-100 text-xs font-bold shadow-2xs">
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-50 text-[#5E2B9D] border border-purple-100 text-xs font-bold shadow-2xs">
             <Receipt className="w-4 h-4" />
             <span>
               GST: {settings.gstEnabled ? `${settings.gstPercentage}% (CGST ${settings.cgstPercentage}% + SGST ${settings.sgstPercentage}%)` : "Disabled"}
@@ -456,7 +456,7 @@ export default function BillingContent() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search medicine name, salt formula, brand, or batch..."
-                className="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white text-xs text-slate-800 placeholder-slate-400 rounded-2xl pl-10 pr-10 py-3 border border-slate-200 focus:border-[#581c87] focus:outline-none transition-all font-medium"
+                className="w-full bg-[#f8fafc] hover:bg-[#f1f5f9] focus:bg-white text-xs text-slate-800 placeholder-slate-400 rounded-2xl pl-10 pr-10 py-3 border border-slate-200 focus:border-[#5E2B9D] focus:outline-none transition-all font-medium"
               />
               {searchQuery && (
                 <button
@@ -478,7 +478,7 @@ export default function BillingContent() {
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3 py-1.5 rounded-xl whitespace-nowrap font-bold text-xs transition-all cursor-pointer ${
                     selectedCategory === cat
-                      ? "bg-[#581c87] text-white shadow-xs"
+                      ? "bg-[#5E2B9D] text-white shadow-xs"
                       : "bg-slate-100/80 hover:bg-slate-200/80 text-slate-600"
                   }`}
                 >
@@ -582,7 +582,7 @@ export default function BillingContent() {
                           type="button"
                           disabled={isOut}
                           onClick={() => handleAddToCart(med, "sheet")}
-                          className="py-1.5 px-2 rounded-xl bg-[#581c87] hover:bg-[#431c8c] disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
+                          className="py-1.5 px-2 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-40 disabled:cursor-not-allowed text-white text-[11px] font-bold flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer"
                         >
                           <Plus className="w-3 h-3" />
                           <span>+ Sheet</span>
@@ -591,7 +591,7 @@ export default function BillingContent() {
                           type="button"
                           disabled={isOut}
                           onClick={() => handleAddToCart(med, "loose")}
-                          className="py-1.5 px-2 rounded-xl bg-purple-50 hover:bg-purple-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#581c87] border border-purple-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
+                          className="py-1.5 px-2 rounded-xl bg-purple-50 hover:bg-purple-100 disabled:opacity-40 disabled:cursor-not-allowed text-[#5E2B9D] border border-purple-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                         >
                           <Plus className="w-3 h-3" />
                           <span>+ Loose</span>
@@ -614,7 +614,7 @@ export default function BillingContent() {
             {/* Cart Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-purple-50 text-[#581c87] border border-purple-100 flex items-center justify-center shadow-xs">
+                <div className="w-9 h-9 rounded-2xl bg-purple-50 text-[#5E2B9D] border border-purple-100 flex items-center justify-center shadow-xs">
                   <ShoppingCart className="w-4 h-4" />
                 </div>
                 <div>
@@ -650,7 +650,7 @@ export default function BillingContent() {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Patient Name"
-                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#581c87]"
+                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs font-medium focus:outline-none focus:border-[#5E2B9D]"
                 />
               </div>
 
@@ -663,7 +663,7 @@ export default function BillingContent() {
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="Phone (optional)"
-                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#581c87]"
+                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D]"
                 />
               </div>
 
@@ -676,7 +676,7 @@ export default function BillingContent() {
                   value={doctorName}
                   onChange={(e) => setDoctorName(e.target.value)}
                   placeholder="Dr. Name / Hospital (optional)"
-                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#581c87]"
+                  className="w-full px-2.5 py-1.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D]"
                 />
               </div>
             </div>
@@ -758,7 +758,7 @@ export default function BillingContent() {
                       onClick={() => setDiscountType("percent")}
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer ${
                         discountType === "percent"
-                          ? "bg-[#581c87] text-white"
+                          ? "bg-[#5E2B9D] text-white"
                           : "text-slate-600"
                       }`}
                     >
@@ -769,7 +769,7 @@ export default function BillingContent() {
                       onClick={() => setDiscountType("rupees")}
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer ${
                         discountType === "rupees"
-                          ? "bg-[#581c87] text-white"
+                          ? "bg-[#5E2B9D] text-white"
                           : "text-slate-600"
                       }`}
                     >
@@ -786,7 +786,7 @@ export default function BillingContent() {
                     value={discountValue || ""}
                     onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
                     placeholder="0"
-                    className="w-20 px-2.5 py-1 text-right bg-white rounded-lg border border-purple-200 font-bold text-slate-900 text-xs focus:outline-none focus:border-[#581c87]"
+                    className="w-20 px-2.5 py-1 text-right bg-white rounded-lg border border-purple-200 font-bold text-slate-900 text-xs focus:outline-none focus:border-[#5E2B9D]"
                   />
                   {discountAmount > 0 && (
                     <span className="text-[10px] text-rose-600 font-bold">
@@ -844,7 +844,7 @@ export default function BillingContent() {
                   <span className="text-xs font-black text-slate-900">
                     Grand Total:
                   </span>
-                  <span className="text-xl font-black text-[#581c87]">
+                  <span className="text-xl font-black text-[#5E2B9D]">
                     ₹{grandTotal.toFixed(2)}
                   </span>
                 </div>
@@ -872,7 +872,7 @@ export default function BillingContent() {
                       onClick={() => setPaymentMethod(item.id as any)}
                       className={`p-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 border transition-all cursor-pointer ${
                         isSelected
-                          ? "bg-[#581c87] text-white border-[#581c87] shadow-xs"
+                          ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
                           : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
@@ -974,7 +974,7 @@ export default function BillingContent() {
               type="button"
               disabled={cartItems.length === 0 || isSettling}
               onClick={handleSettleBill}
-              className="w-full py-3.5 rounded-2xl bg-[#581c87] hover:bg-[#431c8c] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-sm tracking-wide shadow-lg shadow-purple-900/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="w-full py-3.5 rounded-2xl bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-sm tracking-wide shadow-lg shadow-purple-900/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <Receipt className="w-5 h-5" />
               <span>

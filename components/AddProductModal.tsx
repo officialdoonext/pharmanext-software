@@ -68,7 +68,7 @@ export default function AddProductModal({
       <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#581c87] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-purple-50 text-[#5E2B9D] flex items-center justify-center">
               <Package className="w-5 h-5" />
             </div>
             <div>
@@ -93,7 +93,7 @@ export default function AddProductModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Kaju Katli"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 text-sm"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 text-sm"
             />
           </div>
 
@@ -104,7 +104,7 @@ export default function AddProductModal({
                 type="text"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800"
               />
             </div>
             <div>
@@ -112,7 +112,7 @@ export default function AddProductModal({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] bg-white text-slate-800"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] bg-white text-slate-800"
               >
                 <option value="Cakes & Bakery">Cakes & Bakery</option>
                 <option value="Sweets">Sweets</option>
@@ -131,7 +131,7 @@ export default function AddProductModal({
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
                 placeholder="Brand Name"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800"
               />
             </div>
             <div>
@@ -139,7 +139,7 @@ export default function AddProductModal({
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] bg-white text-slate-800"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] bg-white text-slate-800"
               >
                 <option value="Kg">Kg</option>
                 <option value="Piece">Piece</option>
@@ -160,7 +160,7 @@ export default function AddProductModal({
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800"
               />
             </div>
             <div>
@@ -171,7 +171,7 @@ export default function AddProductModal({
                 value={costPrice}
                 onChange={(e) => setCostPrice(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800"
               />
             </div>
             <div>
@@ -182,7 +182,7 @@ export default function AddProductModal({
                 value={stock}
                 onChange={(e) => setStock(e.target.value)}
                 placeholder="0"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800"
+                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800"
               />
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function AddProductModal({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-5 py-2 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
             >
               <Plus className="w-4 h-4" />
               <span>Add Product</span>

@@ -117,7 +117,7 @@ export default function OnboardingPage() {
               />
             </div>
             <div className="flex items-center text-2xl font-black tracking-tight">
-              <span className="text-[#3b0764]">Pharma</span>
+              <span className="text-[#5E2B9D]">Pharma</span>
               <span className="text-[#059669]">Next</span>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default function OnboardingPage() {
               <span className="font-semibold text-slate-700">
                 {user?.email || "admin@pharmanext.com"}
               </span>
-              <span className="font-bold text-[#581c87] bg-white px-2 py-0.5 rounded-md text-[10px] uppercase border border-purple-100">
+              <span className="font-bold text-[#5E2B9D] bg-white px-2 py-0.5 rounded-md text-[10px] uppercase border border-purple-100">
                 {user?.role || "Admin"}
               </span>
             </div>
@@ -160,7 +160,7 @@ export default function OnboardingPage() {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs tracking-wide shadow-md shadow-purple-500/20 transition-all cursor-pointer w-fit"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs tracking-wide shadow-md shadow-purple-500/20 transition-all cursor-pointer w-fit"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Pharmacy</span>
@@ -189,7 +189,7 @@ export default function OnboardingPage() {
             </p>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs shadow-sm cursor-pointer inline-flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs shadow-sm cursor-pointer inline-flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               <span>Register Your First Pharmacy</span>
@@ -304,7 +304,7 @@ export default function OnboardingPage() {
                       onClick={() => handleSelectStore(pharm)}
                       className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                         canAccess
-                          ? "bg-[#581c87] hover:bg-[#431c8c] text-white shadow-md shadow-purple-500/20"
+                          ? "bg-[#5E2B9D] hover:bg-[#4D2382] text-white shadow-md shadow-purple-500/20"
                           : "bg-slate-200 text-slate-500 hover:bg-slate-300"
                       }`}
                     >
@@ -334,7 +334,7 @@ export default function OnboardingPage() {
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#581c87] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#5E2B9D] flex items-center justify-center">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -360,7 +360,7 @@ export default function OnboardingPage() {
               )}
 
               {/* Requirement Alert Notice */}
-              <div className="p-3 bg-purple-50 border border-purple-100 rounded-xl text-[11px] text-[#581c87] leading-relaxed">
+              <div className="p-3 bg-purple-50 border border-purple-100 rounded-xl text-[11px] text-[#5E2B9D] leading-relaxed">
                 ℹ️ As requested, new pharmacies will be saved with{" "}
                 <span className="font-bold">Status: Inactive</span> and{" "}
                 <span className="font-bold">Expiry Date: null</span>. Once activated with a valid
@@ -377,7 +377,7 @@ export default function OnboardingPage() {
                   value={pharmacyName}
                   onChange={(e) => setPharmacyName(e.target.value)}
                   placeholder="e.g. Sanjeevani MediLife Chemist"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100"
                 />
               </div>
 
@@ -391,7 +391,7 @@ export default function OnboardingPage() {
                   value={pharmacyAddress}
                   onChange={(e) => setPharmacyAddress(e.target.value)}
                   placeholder="e.g. Door 4-12, Main Road, Gachibowli, Hyderabad"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 resize-none"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 resize-none"
                 />
               </div>
 
@@ -403,7 +403,7 @@ export default function OnboardingPage() {
                     value={pharmacyPhone}
                     onChange={(e) => setPharmacyPhone(e.target.value)}
                     placeholder="+91 98765 00000"
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#581c87]"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D]"
                   />
                 </div>
                 <div>
@@ -415,7 +415,7 @@ export default function OnboardingPage() {
                     value={pharmacyLicense}
                     onChange={(e) => setPharmacyLicense(e.target.value)}
                     placeholder="DL-TS-2026-9912"
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#581c87] font-mono"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#5E2B9D] font-mono"
                   />
                 </div>
               </div>
@@ -430,7 +430,7 @@ export default function OnboardingPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold transition-all shadow-sm"
+                  className="px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold transition-all shadow-sm"
                 >
                   Save Pharmacy (Inactive)
                 </button>
@@ -480,7 +480,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setDeniedModalData(null)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center cursor-pointer"
               >
                 Understood
               </button>

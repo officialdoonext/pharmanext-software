@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
           <!-- Header -->
           <tr>
             <td style="padding: 28px 32px 20px 32px; text-align: left; border-bottom: 1px solid #f3f4f6;">
-              <span style="font-size: 22px; font-weight: 800; color: #3b0764; letter-spacing: -0.5px;">Pharma<span style="color: #059669;">Next</span></span>
+              <span style="font-size: 22px; font-weight: 800; color: #5E2B9D; letter-spacing: -0.5px;">Pharma<span style="color: #059669;">Next</span></span>
             </td>
           </tr>
           
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
               
               <!-- OTP Box -->
               <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; text-align: center; margin: 24px 0;">
-                <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #581c87; display: inline-block;">${generatedOtp}</span>
+                <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 34px; font-weight: 800; letter-spacing: 8px; color: #5E2B9D; display: inline-block;">${generatedOtp}</span>
               </div>
               
               <p style="margin: 24px 0 0 0; font-size: 13px; color: #6b7280; line-height: 1.5;">If you did not request this verification code, please ignore this email or contact support if you have questions.</p>

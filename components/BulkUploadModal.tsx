@@ -316,7 +316,7 @@ export default function BulkUploadModal({
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in">
       <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200/80 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="px-6 py-4.5 bg-gradient-to-r from-slate-900 via-[#1e1b4b] to-[#3b0764] text-white flex items-center justify-between shrink-0 shadow-sm">
+        <div className="px-6 py-4.5 bg-gradient-to-r from-slate-900 via-[#1e1b4b] to-[#5E2B9D] text-white flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-emerald-400 shadow-inner">
               <FileSpreadsheet className="w-5 h-5" />
@@ -407,7 +407,7 @@ export default function BulkUploadModal({
                     <button
                       type="button"
                       onClick={downloadSampleMedicinesExcel}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                       title="Download formatted Excel (.xlsx) containing 200 sample medicines"
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -448,7 +448,7 @@ export default function BulkUploadModal({
                       : "border-slate-300 hover:border-purple-400 bg-slate-50/70 hover:bg-purple-50/10"
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-[#581c87] mb-2 shadow-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-[#5E2B9D] mb-2 shadow-xs">
                     {isParsing ? (
                       <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
@@ -546,7 +546,7 @@ export default function BulkUploadModal({
                             </span>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="font-bold text-[#581c87] block">
+                            <span className="font-bold text-[#5E2B9D] block">
                               ₹{r["Sheet Price"] || 0} / sheet
                             </span>
                             <span className="text-[10px] text-emerald-600 font-medium">
@@ -578,7 +578,7 @@ export default function BulkUploadModal({
               type="button"
               disabled={parsedRows.length === 0 || isImporting}
               onClick={handleImport}
-              className="px-5 py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-purple-900/20 transition-all cursor-pointer flex items-center gap-2"
+              className="px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-purple-900/20 transition-all cursor-pointer flex items-center gap-2"
             >
               {isImporting ? (
                 <>

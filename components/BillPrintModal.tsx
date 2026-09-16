@@ -85,7 +85,7 @@ export default function BillPrintModal({
       <div className="bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[95vh] my-auto">
         
         {/* Modal Top Bar (Hidden during Print) */}
-        <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-[#1e1b4b] to-[#3b0764] text-white flex items-center justify-between shrink-0 print:hidden">
+        <div className="px-6 py-4 bg-gradient-to-r from-slate-900 via-[#1e1b4b] to-[#5E2B9D] text-white flex items-center justify-between shrink-0 print:hidden">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
               <CheckCircle2 className="w-5 h-5" />
@@ -124,7 +124,7 @@ export default function BillPrintModal({
                 onClick={() => setPrintFormat("thermal")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   printFormat === "thermal"
-                    ? "bg-[#581c87] text-white shadow-xs"
+                    ? "bg-[#5E2B9D] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -136,7 +136,7 @@ export default function BillPrintModal({
                 onClick={() => setPrintFormat("a5")}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   printFormat === "a5"
-                    ? "bg-[#581c87] text-white shadow-xs"
+                    ? "bg-[#5E2B9D] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -161,7 +161,7 @@ export default function BillPrintModal({
                 onClose();
                 onStartNewBill();
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white text-xs font-bold transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white text-xs font-bold transition-all cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>+ New Bill</span>

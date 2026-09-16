@@ -3,6 +3,11 @@
 :root {
   --background: #f8fafc;
   --foreground: #1e293b;
+  --primary: #5E2B9D;
+  --primary-hover: #4D2382;
+  --primary-active: #3F1D6B;
+  --primary-light: #F5F0FB;
+  --primary-border: #D8C3F2;
 }
 
 body {
@@ -13,17 +18,132 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Strictly enforce 6px border radius for all buttons */
+/* ==========================================================================
+   CONSTRAINT 1: Primary Color Utilities (#5E2B9D)
+   ========================================================================== */
+.bg-primary {
+  background-color: #5E2B9D !important;
+}
+.text-primary {
+  color: #5E2B9D !important;
+}
+.border-primary {
+  border-color: #5E2B9D !important;
+}
+
+/* ==========================================================================
+   CONSTRAINT 2: Max 6px Border Radius (Never more than 6px anywhere)
+   ========================================================================== */
+*, *::before, *::after {
+  --radius: 6px;
+}
+
+.rounded,
+.rounded-sm,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl,
+.rounded-full,
+[class*="rounded-md"],
+[class*="rounded-lg"],
+[class*="rounded-xl"],
+[class*="rounded-2xl"],
+[class*="rounded-3xl"],
+[class*="rounded-full"],
 button,
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-.btn,
-a[role="button"] {
+input,
+select,
+textarea,
+dialog,
+[role="dialog"],
+[role="tab"],
+.btn {
   border-radius: 6px !important;
 }
 
-/* Global Interactive Cursor Pointer: Buttons, Tabs, Dropdowns, Anchors, Labels, etc. */
+[class*="rounded-t-"] {
+  border-top-left-radius: 6px !important;
+  border-top-right-radius: 6px !important;
+}
+[class*="rounded-b-"] {
+  border-bottom-left-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+[class*="rounded-l-"] {
+  border-top-left-radius: 6px !important;
+  border-bottom-left-radius: 6px !important;
+}
+[class*="rounded-r-"] {
+  border-top-right-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+.rounded-none {
+  border-radius: 0px !important;
+}
+
+/* ==========================================================================
+   CONSTRAINT 3: Max Height of Button and Input: 40px Only
+   ========================================================================== */
+button,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+.btn,
+a[role="button"] {
+  max-height: 40px !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure flex/inline-flex items align nicely inside 40px max height */
+button,
+.btn,
+a[role="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   CONSTRAINT 4: Max Font Weight: 500 Only For Any Text
+   ========================================================================== */
+b,
+strong,
+th,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-semibold,
+.font-bold,
+.font-extrabold,
+.font-black,
+[class*="font-semibold"],
+[class*="font-bold"],
+[class*="font-extrabold"],
+[class*="font-black"],
+[class*="font-[600]"],
+[class*="font-[700]"],
+[class*="font-[800]"],
+[class*="font-[900]"],
+[style*="font-weight: bold"],
+[style*="font-weight:bold"],
+[style*="font-weight: 600"],
+[style*="font-weight: 700"],
+[style*="font-weight: 800"],
+[style*="font-weight: 900"],
+[style*="font-weight:600"],
+[style*="font-weight:700"],
+[style*="font-weight:800"],
+[style*="font-weight:900"] {
+  font-weight: 500 !important;
+}
+
+/* ==========================================================================
+   Global Interactive Cursor Pointer: Buttons, Tabs, Dropdowns, Anchors, etc.
+   ========================================================================== */
 button,
 a,
 select,

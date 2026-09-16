@@ -43,7 +43,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-[#581c87] animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#5E2B9D] animate-spin" />
           <p className="text-xs font-semibold text-slate-500 tracking-wide">
             Verifying Security Session...
           </p>

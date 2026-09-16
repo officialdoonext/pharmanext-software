@@ -212,7 +212,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex items-center text-3xl font-extrabold tracking-tight">
-          <span className="text-[#3b0764]">Pharma</span>
+          <span className="text-[#5E2B9D]">Pharma</span>
           <span className="text-[#059669]">Next</span>
         </div>
         <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-widest">
@@ -238,7 +238,7 @@ export default function LoginPage() {
             }}
             className={`py-2.5 text-xs font-bold rounded-xl transition-all ${
               activeTab === "admin"
-                ? "bg-white text-[#581c87] shadow-sm"
+                ? "bg-white text-[#5E2B9D] shadow-sm"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -252,7 +252,7 @@ export default function LoginPage() {
             }}
             className={`py-2.5 text-xs font-bold rounded-xl transition-all ${
               activeTab === "staff"
-                ? "bg-white text-[#581c87] shadow-sm"
+                ? "bg-white text-[#5E2B9D] shadow-sm"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -292,7 +292,7 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="admin@pharmanext.com"
-                      className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 transition-all"
+                      className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all"
                     />
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
@@ -303,7 +303,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSending}
-                  className="w-full py-3 px-4 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="w-full py-3 px-4 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {isSending ? (
                     <>
@@ -332,7 +332,7 @@ export default function LoginPage() {
                       setOtpStep("email");
                       setErrorMessage(null);
                     }}
-                    className="text-[11px] font-bold text-[#581c87] hover:underline mt-0.5"
+                    className="text-[11px] font-bold text-[#5E2B9D] hover:underline mt-0.5"
                   >
                     Change Email
                   </button>
@@ -352,7 +352,7 @@ export default function LoginPage() {
                       value={digit}
                       onChange={(e) => handleOtpChange(idx, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(idx, e)}
-                      className="w-11 h-12 text-center text-lg font-bold rounded-xl border border-slate-200 bg-[#f8fafc] text-slate-900 focus:bg-white focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all"
+                      className="w-11 h-12 text-center text-lg font-bold rounded-xl border border-slate-200 bg-[#f8fafc] text-slate-900 focus:bg-white focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all"
                     />
                   ))}
                 </div>
@@ -363,7 +363,7 @@ export default function LoginPage() {
                     {timer > 0 ? (
                       <>
                         Expires in{" "}
-                        <span className="font-bold text-[#581c87]">
+                        <span className="font-bold text-[#5E2B9D]">
                           00:{timer < 10 ? `0${timer}` : timer}
                         </span>
                       </>
@@ -375,7 +375,7 @@ export default function LoginPage() {
                     type="button"
                     disabled={timer > 0}
                     onClick={handleResend}
-                    className="font-bold text-[#581c87] disabled:text-slate-300 hover:underline cursor-pointer disabled:cursor-not-allowed"
+                    className="font-bold text-[#5E2B9D] disabled:text-slate-300 hover:underline cursor-pointer disabled:cursor-not-allowed"
                   >
                     Resend Code
                   </button>
@@ -384,7 +384,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isVerifying}
-                  className="w-full py-3 px-4 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="w-full py-3 px-4 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                 >
                   {isVerifying ? (
                     <>
@@ -418,7 +418,7 @@ export default function LoginPage() {
                   value={storeCode}
                   onChange={(e) => setStoreCode(e.target.value)}
                   placeholder="e.g. PHARM-XXXX"
-                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 transition-all font-mono"
+                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all font-mono"
                 />
               </div>
             </div>
@@ -435,7 +435,7 @@ export default function LoginPage() {
                   value={staffUsername}
                   onChange={(e) => setStaffUsername(e.target.value)}
                   placeholder="pharmacist_rahul"
-                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 transition-all"
+                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all"
                 />
               </div>
             </div>
@@ -452,7 +452,7 @@ export default function LoginPage() {
                   value={staffPassword}
                   onChange={(e) => setStaffPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 transition-all"
+                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all"
                 />
               </div>
             </div>
@@ -460,7 +460,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isStaffSubmitting}
-              className="w-full py-3 px-4 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full py-3 px-4 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs tracking-wide transition-all shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isStaffSubmitting ? (
                 <>

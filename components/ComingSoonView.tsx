@@ -27,7 +27,7 @@ export default function ComingSoonView({
       {/* Back button */}
       <Link
         href="/products"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#581c87] mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#5E2B9D] mb-6 transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>Back to Products</span>
@@ -40,13 +40,13 @@ export default function ComingSoonView({
         <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-[#581c87] border border-purple-200 mb-6">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-[#5E2B9D] border border-purple-200 mb-6">
           <Clock className="w-3.5 h-3.5" />
           <span>Coming Soon • {category}</span>
         </div>
 
         {/* Big Icon */}
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#581c87] to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 mb-6">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#5E2B9D] to-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/25 mb-6">
           <Icon className="w-10 h-10" />
         </div>
 
@@ -62,13 +62,13 @@ export default function ComingSoonView({
         {/* Planned Features List */}
         <div className="w-full max-w-md bg-slate-50 rounded-xl p-5 border border-slate-100 text-left mb-8">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-[#581c87]" />
+            <Sparkles className="w-3.5 h-3.5 text-[#5E2B9D]" />
             <span>Upcoming Features for {title}</span>
           </div>
           <ul className="space-y-2">
             {features.map((feat, idx) => (
               <li key={idx} className="flex items-center gap-2.5 text-xs text-slate-600">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#581c87]"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#5E2B9D]"></div>
                 <span>{feat}</span>
               </li>
             ))}
@@ -79,7 +79,7 @@ export default function ComingSoonView({
         <div className="flex items-center gap-4">
           <Link
             href="/products"
-            className="px-6 py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-medium text-xs transition-all shadow-md shadow-purple-500/20"
+            className="px-6 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-medium text-xs transition-all shadow-md shadow-purple-500/20"
           >
             View Products
           </Link>

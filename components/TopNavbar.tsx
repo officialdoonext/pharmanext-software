@@ -58,11 +58,11 @@ export default function TopNavbar() {
             </div>
             {/* Logo Text */}
             <div className="flex flex-col">
-              <div className="flex items-center text-2xl font-black tracking-tight leading-none">
-                <span className="text-[#3b0764]">Pharma</span>
+              <div className="flex items-center text-2xl font-medium tracking-tight leading-none">
+                <span className="text-[#5E2B9D]">Pharma</span>
                 <span className="text-[#059669]">Next</span>
               </div>
-              <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase mt-1">
+              <span className="text-[10px] font-medium text-slate-400 tracking-wider uppercase mt-1">
                 {APP_CONFIG.appTagline}
               </span>
             </div>
@@ -72,31 +72,28 @@ export default function TopNavbar() {
           {currentPharmacy && (
             <Link
               href="/onboarding"
-              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100/70 border border-purple-200/80 text-xs transition-colors group"
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-md bg-purple-50 hover:bg-purple-100/70 border border-purple-200/80 text-xs transition-colors group"
+              title="Click to view pharmacy profile or switch outlet"
             >
-              <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <Store className="w-3.5 h-3.5" />
-              </div>
-              <div className="flex flex-col text-left max-w-[160px]">
-                <span className="font-bold text-slate-900 truncate leading-tight">
-                  {currentPharmacy.name}
-                </span>
-                <span className="text-[10px] font-medium text-purple-700 group-hover:underline">
-                  Switch Store
-                </span>
-              </div>
-              <RefreshCw className="w-3 h-3 text-purple-600 ml-1 opacity-70 group-hover:opacity-100" />
+              <div className="w-2 h-2 rounded-full bg-[#5E2B9D] animate-pulse"></div>
+              <span className="font-medium text-slate-700 group-hover:text-[#5E2B9D] transition-colors">
+                {currentPharmacy.name}
+              </span>
+              <span className="text-[10px] bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-500 font-medium">
+                {currentPharmacy.licenseNo ? `Lic: ${currentPharmacy.licenseNo}` : "Main Outlet"}
+              </span>
+              <ChevronDown className="w-3 h-3 text-slate-400 group-hover:text-slate-600 transition-colors" />
             </Link>
           )}
         </div>
 
-        {/* Center Horizontal Menu - Icon on TOP, Text BELOW */}
-        <nav className="flex items-center gap-2 sm:gap-4 md:gap-5 flex-1 justify-center px-2">
+        {/* Center Navigation Bar */}
+        <nav className="flex items-center gap-1 overflow-x-auto py-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isMedicinesActive =
               item.href === "/medicines" &&
-              (pathname === "/medicines" ||
+              (pathname.startsWith("/medicines") ||
                 pathname === "/products" ||
                 pathname === "/");
             const isOtherActive =
@@ -107,9 +104,9 @@ export default function TopNavbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center px-3.5 py-2 rounded-xl transition-all duration-150 group shrink-0 ${
+                className={`relative flex flex-col items-center justify-center px-3.5 py-2 rounded-md transition-all duration-150 group shrink-0 ${
                   isActive
-                    ? "text-[#581c87] font-bold"
+                    ? "text-[#5E2B9D] font-medium"
                     : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
@@ -117,7 +114,7 @@ export default function TopNavbar() {
                 <Icon
                   className={`w-5 h-5 transition-transform duration-150 group-hover:scale-105 ${
                     isActive
-                      ? "text-[#581c87] stroke-[2.3]"
+                      ? "text-[#5E2B9D] stroke-[2.3]"
                       : "text-slate-400 group-hover:text-slate-700 stroke-[1.9]"
                   }`}
                 />
@@ -126,8 +123,8 @@ export default function TopNavbar() {
                 <span
                   className={`text-xs mt-1.5 tracking-tight ${
                     isActive
-                      ? "font-bold text-[#581c87]"
-                      : "font-semibold text-slate-500 group-hover:text-slate-900"
+                      ? "font-medium text-[#5E2B9D]"
+                      : "font-normal text-slate-500 group-hover:text-slate-900"
                   }`}
                 >
                   {item.name}
@@ -135,7 +132,7 @@ export default function TopNavbar() {
 
                 {/* Bottom Active Purple Indicator Bar */}
                 {isActive && (
-                  <span className="absolute -bottom-2 left-2 right-2 h-[3px] bg-[#581c87] rounded-full shadow-xs"></span>
+                  <span className="absolute -bottom-2 left-2 right-2 h-[3px] bg-[#5E2B9D] rounded-full shadow-xs"></span>
                 )}
               </Link>
             );
@@ -150,14 +147,14 @@ export default function TopNavbar() {
               title="View Store Settings & Profile"
               className="flex items-center gap-3 group cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#581c87] to-purple-600 ring-2 ring-purple-100 flex items-center justify-center text-white text-xs font-bold shadow-xs shrink-0 group-hover:ring-purple-300 transition-all">
+              <div className="w-10 h-10 rounded-md bg-gradient-to-tr from-[#5E2B9D] to-purple-600 ring-2 ring-purple-100 flex items-center justify-center text-white text-xs font-medium shadow-xs shrink-0 group-hover:ring-purple-300 transition-all">
                 {user ? user.name.slice(0, 2).toUpperCase() : "SK"}
               </div>
               <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-slate-900 group-hover:text-[#581c87] leading-tight transition-colors">
+                <span className="text-xs font-medium text-slate-900 group-hover:text-[#5E2B9D] leading-tight transition-colors">
                   {user?.name || "Siva Krishna"}
                 </span>
-                <span className="text-[11px] font-medium text-slate-400 leading-tight capitalize">
+                <span className="text-[11px] font-normal text-slate-400 leading-tight capitalize">
                   {user?.role ? `${user.role} Admin` : "Store Admin"}
                 </span>
               </div>
@@ -167,7 +164,7 @@ export default function TopNavbar() {
             <Link
               href="/settings"
               title="Store Settings & GST"
-              className="p-2 rounded-xl text-slate-400 hover:text-[#581c87] hover:bg-purple-50 transition-colors cursor-pointer"
+              className="p-2 rounded-md text-slate-400 hover:text-[#5E2B9D] hover:bg-purple-50 transition-colors cursor-pointer"
             >
               <Settings className="w-4 h-4" />
             </Link>
@@ -176,7 +173,7 @@ export default function TopNavbar() {
             <button
               onClick={logout}
               title="Log Out"
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+              className="p-2 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>

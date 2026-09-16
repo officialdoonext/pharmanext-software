@@ -107,7 +107,7 @@ export default function SettingsContent() {
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Store Settings &amp; GST Setup
             </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#581c87] border border-purple-200">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#5E2B9D] border border-purple-200">
               Billing Configuration
             </span>
           </div>
@@ -141,7 +141,7 @@ export default function SettingsContent() {
           {/* Section 1: Pharmacy Profile Details */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#581c87] border border-purple-100 flex items-center justify-center shadow-xs">
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#5E2B9D] border border-purple-100 flex items-center justify-center shadow-xs">
                 <Store className="w-5 h-5" />
               </div>
               <div>
@@ -169,7 +169,7 @@ export default function SettingsContent() {
                     setSettings({ ...settings, pharmacyName: e.target.value })
                   }
                   placeholder="e.g. Sri Krishna Pharmacy & Healthcare"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 font-bold text-xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 font-bold text-xs"
                 />
               </div>
 
@@ -188,7 +188,7 @@ export default function SettingsContent() {
                       setSettings({ ...settings, phone: e.target.value })
                     }
                     placeholder="e.g. +91 98765 43210"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-xs font-medium"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs font-medium"
                   />
                 </div>
 
@@ -205,7 +205,7 @@ export default function SettingsContent() {
                       setSettings({ ...settings, email: e.target.value })
                     }
                     placeholder="e.g. billing@pharmacynext.in"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-xs font-medium"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs font-medium"
                   />
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function SettingsContent() {
                     setSettings({ ...settings, address: e.target.value })
                   }
                   placeholder="e.g. Shop #4, Ground Floor, Sri Sai Complex, Main Road, Hyderabad - 500001"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-xs font-medium resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs font-medium resize-none"
                 />
               </div>
 
@@ -242,7 +242,7 @@ export default function SettingsContent() {
                       setSettings({ ...settings, drugLicenseNo: e.target.value })
                     }
                     placeholder="e.g. DL-20B/1234, DL-21B/5678"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs"
                   />
                 </div>
 
@@ -258,7 +258,7 @@ export default function SettingsContent() {
                       setSettings({ ...settings, pharmacistName: e.target.value })
                     }
                     placeholder="e.g. Siva Krishna (Reg. 54129)"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs"
                   />
                 </div>
               </div>
@@ -296,7 +296,7 @@ export default function SettingsContent() {
                     }
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#581c87]"></div>
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5E2B9D]"></div>
                 </div>
               </label>
             </div>
@@ -318,7 +318,7 @@ export default function SettingsContent() {
                       setSettings({ ...settings, gstNumber: e.target.value.toUpperCase() })
                     }
                     placeholder="e.g. 36AAACP1234A1Z5"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 font-mono font-bold text-xs uppercase"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 font-mono font-bold text-xs uppercase"
                   />
                   <span className="text-[10px] text-slate-400 mt-1 block">
                     15-character Government of India Goods &amp; Services Tax Identification Number
@@ -343,7 +343,7 @@ export default function SettingsContent() {
                         onClick={() => handleTotalGstChange(preset.val)}
                         className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           settings.gstPercentage === preset.val
-                            ? "bg-[#581c87] text-white border-[#581c87] shadow-xs"
+                            ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
                             : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                         }`}
                       >
@@ -369,7 +369,7 @@ export default function SettingsContent() {
                       onChange={(e) =>
                         handleTotalGstChange(parseFloat(e.target.value) || 0)
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-purple-200 bg-white font-bold text-slate-900 text-xs focus:outline-none focus:border-[#581c87]"
+                      className="w-full px-3 py-2 rounded-xl border border-purple-200 bg-white font-bold text-slate-900 text-xs focus:outline-none focus:border-[#5E2B9D]"
                     />
                   </div>
 
@@ -386,7 +386,7 @@ export default function SettingsContent() {
                       onChange={(e) =>
                         handleCgstChange(parseFloat(e.target.value) || 0)
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 text-xs focus:outline-none focus:border-[#581c87]"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 text-xs focus:outline-none focus:border-[#5E2B9D]"
                     />
                   </div>
 
@@ -403,7 +403,7 @@ export default function SettingsContent() {
                       onChange={(e) =>
                         handleSgstChange(parseFloat(e.target.value) || 0)
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 text-xs focus:outline-none focus:border-[#581c87]"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-semibold text-slate-900 text-xs focus:outline-none focus:border-[#5E2B9D]"
                     />
                   </div>
                 </div>
@@ -423,7 +423,7 @@ export default function SettingsContent() {
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-3 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs shadow-md shadow-purple-900/20 transition-all cursor-pointer flex items-center gap-2"
+              className="px-6 py-3 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs shadow-md shadow-purple-900/20 transition-all cursor-pointer flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{isSaving ? "Saving Configuration..." : "Save Settings"}</span>

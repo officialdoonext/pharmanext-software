@@ -253,7 +253,7 @@ export default function AddMedicineModal({
       {/* Fullscreen Modal Container */}
       <div className="bg-white w-full h-full sm:max-h-[96vh] sm:rounded-3xl shadow-2xl border border-slate-200/80 flex flex-col overflow-hidden">
         {/* Sticky Modal Top Header */}
-        <div className="px-6 py-4.5 bg-gradient-to-r from-slate-900 via-[#1e1b4b] to-[#3b0764] text-white flex items-center justify-between shrink-0 shadow-sm">
+        <div className="px-6 py-4.5 bg-gradient-to-r from-slate-900 via-[#1e1b4b] to-[#5E2B9D] text-white flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-inner">
               <Pill className="w-6 h-6 text-emerald-300" />
@@ -296,7 +296,7 @@ export default function AddMedicineModal({
               <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#581c87]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#5E2B9D]"></span>
                     <h3 className="text-sm font-bold text-slate-900">
                       Medicine & Salt Formulation
                     </h3>
@@ -318,7 +318,7 @@ export default function AddMedicineModal({
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Dolo 650 Tablet, Augmentin 625 Duo, Pan-D"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] focus:ring-2 focus:ring-purple-100 text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 text-sm font-medium text-slate-900 placeholder:text-slate-400"
                     />
                   </div>
 
@@ -332,7 +332,7 @@ export default function AddMedicineModal({
                       value={genericName}
                       onChange={(e) => setGenericName(e.target.value)}
                       placeholder="e.g. Paracetamol IP 650mg, Amoxicillin + Clavulanic Acid"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                     />
                   </div>
 
@@ -346,7 +346,7 @@ export default function AddMedicineModal({
                       value={brandName}
                       onChange={(e) => setBrandName(e.target.value)}
                       placeholder="e.g. Micro Labs, GlaxoSmithKline, Sun Pharma"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                     />
                   </div>
 
@@ -361,7 +361,7 @@ export default function AddMedicineModal({
                         value={manufacturer}
                         onChange={(e) => setManufacturer(e.target.value)}
                         placeholder="e.g. Cipla Ltd., Dr. Reddy's, Mankind Pharma"
-                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                       />
                       <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     </div>
@@ -377,7 +377,7 @@ export default function AddMedicineModal({
                       value={strength}
                       onChange={(e) => setStrength(e.target.value)}
                       placeholder="e.g. 500 mg, 625 mg, 100 ml, 2% w/v"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                     />
                   </div>
                 </div>
@@ -407,7 +407,7 @@ export default function AddMedicineModal({
                       <button
                         type="button"
                         onClick={() => setShowQuickAddType(!showQuickAddType)}
-                        className="text-[11px] text-[#581c87] hover:underline font-semibold"
+                        className="text-[11px] text-[#5E2B9D] hover:underline font-semibold"
                       >
                         + Add Type
                       </button>
@@ -424,7 +424,7 @@ export default function AddMedicineModal({
                         <button
                           type="button"
                           onClick={handleQuickAddTypeSubmit}
-                          className="px-2 py-1.5 rounded-lg bg-[#581c87] text-white text-[11px] font-semibold"
+                          className="px-2 py-1.5 rounded-lg bg-[#5E2B9D] text-white text-[11px] font-semibold"
                         >
                           Save
                         </button>
@@ -433,7 +433,7 @@ export default function AddMedicineModal({
                     <select
                       value={medicineType}
                       onChange={(e) => setMedicineType(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] bg-white text-slate-800 text-xs font-medium cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] bg-white text-slate-800 text-xs font-medium cursor-pointer"
                     >
                       {medicineTypes.length === 0 ? (
                         <option value="">-- No types yet (Click &quot;+ Add Type&quot;) --</option>
@@ -459,7 +459,7 @@ export default function AddMedicineModal({
                       <button
                         type="button"
                         onClick={() => setShowQuickAddCat(!showQuickAddCat)}
-                        className="text-[11px] text-[#581c87] hover:underline font-semibold"
+                        className="text-[11px] text-[#5E2B9D] hover:underline font-semibold"
                       >
                         + Add Cat
                       </button>
@@ -476,7 +476,7 @@ export default function AddMedicineModal({
                         <button
                           type="button"
                           onClick={handleQuickAddCatSubmit}
-                          className="px-2 py-1.5 rounded-lg bg-[#581c87] text-white text-[11px] font-semibold"
+                          className="px-2 py-1.5 rounded-lg bg-[#5E2B9D] text-white text-[11px] font-semibold"
                         >
                           Save
                         </button>
@@ -489,7 +489,7 @@ export default function AddMedicineModal({
                         setCategory(e.target.value);
                         setSubCategory("");
                       }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] bg-white text-slate-800 text-xs font-medium cursor-pointer"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] bg-white text-slate-800 text-xs font-medium cursor-pointer"
                     >
                       {categories.length === 0 ? (
                         <option value="">-- No categories yet (Click &quot;+ Add Cat&quot;) --</option>
@@ -515,7 +515,7 @@ export default function AddMedicineModal({
                       <select
                         value={subCategory}
                         onChange={(e) => setSubCategory(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] bg-white text-slate-800 text-xs font-medium cursor-pointer"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] bg-white text-slate-800 text-xs font-medium cursor-pointer"
                       >
                         <option value="">-- Select Sub Category --</option>
                         {availableSubCategories.map((sub) => (
@@ -530,7 +530,7 @@ export default function AddMedicineModal({
                         value={subCategory}
                         onChange={(e) => setSubCategory(e.target.value)}
                         placeholder="e.g. Penicillins, Antacids"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                       />
                     )}
                   </div>
@@ -570,7 +570,7 @@ export default function AddMedicineModal({
                           onClick={() => handleUnitsPerSheetChange(cnt)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
                             unitsPerSheet === cnt
-                              ? "bg-[#581c87] text-white border-[#581c87] shadow-xs"
+                              ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
                               : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
@@ -592,7 +592,7 @@ export default function AddMedicineModal({
                         value={unitsPerSheet}
                         onChange={(e) => handleUnitsPerSheetChange(e.target.value)}
                         placeholder="10"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#581c87] text-slate-900 text-xs font-bold"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-xs font-bold"
                       />
                     </div>
                     <div>
@@ -602,7 +602,7 @@ export default function AddMedicineModal({
                       <select
                         value={packagingName}
                         onChange={(e) => setPackagingName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#581c87] text-slate-800 text-xs font-medium cursor-pointer"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs font-medium cursor-pointer"
                       >
                         <option value="Sheet / Strip">Sheet / Strip</option>
                         <option value="Box">Box</option>
@@ -645,7 +645,7 @@ export default function AddMedicineModal({
                           value={sheetPrice}
                           onChange={(e) => handleSheetPriceChange(e.target.value)}
                           placeholder="0.00"
-                          className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-sm font-bold"
+                          className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-sm font-bold"
                         />
                         <span className="absolute left-2.5 top-2 text-slate-400 font-bold">₹</span>
                       </div>
@@ -666,7 +666,7 @@ export default function AddMedicineModal({
                           value={unitPrice}
                           onChange={(e) => handleUnitPriceChange(e.target.value)}
                           placeholder="0.00"
-                          className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-900 text-sm font-bold"
+                          className="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-900 text-sm font-bold"
                         />
                         <span className="absolute left-2.5 top-2 text-slate-400 font-bold">₹</span>
                       </div>
@@ -687,7 +687,7 @@ export default function AddMedicineModal({
                           value={sheetCostPrice}
                           onChange={(e) => handleSheetCostPriceChange(e.target.value)}
                           placeholder="0.00"
-                          className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#581c87]"
+                          className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#5E2B9D]"
                         />
                         <span className="absolute left-2.5 top-1.5 text-slate-400 font-semibold">₹</span>
                       </div>
@@ -704,7 +704,7 @@ export default function AddMedicineModal({
                           value={unitCostPrice}
                           onChange={(e) => handleUnitCostPriceChange(e.target.value)}
                           placeholder="0.00"
-                          className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#581c87]"
+                          className="w-full pl-7 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-[#5E2B9D]"
                         />
                         <span className="absolute left-2.5 top-1.5 text-slate-400 font-semibold">₹</span>
                       </div>
@@ -791,7 +791,7 @@ export default function AddMedicineModal({
                       value={batchNumber}
                       onChange={(e) => setBatchNumber(e.target.value)}
                       placeholder="e.g. BAT-4402"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                     />
                   </div>
 
@@ -805,7 +805,7 @@ export default function AddMedicineModal({
                         value={expiryDate}
                         onChange={(e) => setExpiryDate(e.target.value)}
                         placeholder="e.g. 12/2027 or YYYY-MM"
-                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs"
                       />
                       <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     </div>
@@ -826,7 +826,7 @@ export default function AddMedicineModal({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter medical indications, dosage instructions, contraindications, side effects, or storage conditions..."
-                  className="w-full p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#581c87] text-slate-800 text-xs resize-none"
+                  className="w-full p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#5E2B9D] text-slate-800 text-xs resize-none"
                 />
               </div>
 
@@ -941,7 +941,7 @@ export default function AddMedicineModal({
                     onClick={() => fileInputRef.current?.click()}
                     className="w-full h-40 rounded-2xl border-2 border-dashed border-slate-200 hover:border-purple-400 bg-slate-50/70 hover:bg-purple-50/20 cursor-pointer flex flex-col items-center justify-center gap-2 text-center p-4 transition-colors"
                   >
-                    <div className="w-10 h-10 rounded-full bg-white shadow-xs border border-slate-200 flex items-center justify-center text-[#581c87]">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-xs border border-slate-200 flex items-center justify-center text-[#5E2B9D]">
                       <Upload className="w-5 h-5" />
                     </div>
                     <div>
@@ -968,7 +968,7 @@ export default function AddMedicineModal({
                         onClick={() => setImageEmoji(emoji)}
                         className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center border transition-all ${
                           imageEmoji === emoji
-                            ? "bg-purple-100 border-[#581c87] scale-110 shadow-xs"
+                            ? "bg-purple-100 border-[#5E2B9D] scale-110 shadow-xs"
                             : "bg-slate-50 border-slate-200 hover:bg-slate-100"
                         }`}
                       >
@@ -982,7 +982,7 @@ export default function AddMedicineModal({
               {/* Real-time Medicine Card Summary */}
               <div className="bg-gradient-to-br from-purple-50 to-indigo-50/50 p-5 rounded-2xl border border-purple-100 space-y-3">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#581c87]" />
+                  <Sparkles className="w-4 h-4 text-[#5E2B9D]" />
                   <h4 className="text-xs font-bold text-slate-900">
                     Live Preview Summary
                   </h4>
@@ -1002,7 +1002,7 @@ export default function AddMedicineModal({
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    <span className="px-2 py-0.5 rounded-md bg-purple-50 text-[#581c87] font-semibold text-[10px]">
+                    <span className="px-2 py-0.5 rounded-md bg-purple-50 text-[#5E2B9D] font-semibold text-[10px]">
                       {medicineType || "Dosage Form"}
                     </span>
                     <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium text-[10px]">
@@ -1067,7 +1067,7 @@ export default function AddMedicineModal({
             <button
               type="button"
               onClick={handleSubmit}
-              className="px-6 py-2.5 rounded-xl bg-[#581c87] hover:bg-[#431c8c] text-white font-bold text-xs transition-all shadow-md shadow-purple-900/20 flex items-center gap-2"
+              className="px-6 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs transition-all shadow-md shadow-purple-900/20 flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               <span>Save & Add Medicine</span>
