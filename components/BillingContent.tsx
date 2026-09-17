@@ -730,6 +730,21 @@ export default function BillingContent() {
     setSettledInvoice(newInvoice);
     setIsPrintModalOpen(true);
     setIsSettling(false);
+
+    // Clear the Order Summary immediately once bill is settled
+    setCartItems([]);
+    setCustomerName("Walk-in Customer");
+    setCustomerPhone("");
+    setDoctorName("");
+    setSelectedCustomer(null);
+    setCustomerSearchInput("");
+    setDiscountType("percent");
+    setDiscountValue(0);
+    setCashTendered("");
+    setSplitCash("");
+    setSplitOnline("");
+    setTransactionRef("");
+    setMobileTab("catalog");
   };
 
   const handleStartNewBill = () => {
@@ -737,12 +752,16 @@ export default function BillingContent() {
     setCustomerName("Walk-in Customer");
     setCustomerPhone("");
     setDoctorName("");
+    setSelectedCustomer(null);
+    setCustomerSearchInput("");
+    setDiscountType("percent");
     setDiscountValue(0);
     setCashTendered("");
     setSplitCash("");
     setSplitOnline("");
     setTransactionRef("");
     setSettledInvoice(null);
+    setMobileTab("catalog");
   };
 
   return (
@@ -1874,7 +1893,10 @@ export default function BillingContent() {
       {/* Bill Print Selection Modal (Thermal vs A5) */}
       <BillPrintModal
         isOpen={isPrintModalOpen}
-        onClose={() => setIsPrintModalOpen(false)}
+        onClose={() => {
+          setIsPrintModalOpen(false);
+          handleStartNewBill();
+        }}
         invoice={settledInvoice}
         settings={settings}
         onStartNewBill={handleStartNewBill}
