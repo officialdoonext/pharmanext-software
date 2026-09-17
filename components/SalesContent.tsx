@@ -38,8 +38,8 @@ export default function SalesContent() {
   const [invoices, setInvoices] = useState<BillInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterPayment, setFilterPayment] = useState<"All" | "Cash" | "UPI" | "Card" | "Split">("All");
-  const [filterPeriod, setFilterPeriod] = useState<"all" | "today" | "month">("all");
+  const [selectedDate, setSelectedDate] = useState<string>(""); // YYYY-MM-DD
+  const [filterPeriod, setFilterPeriod] = useState<"all" | "today">("all");
 
   // Bill print modal state
   const [selectedInvoice, setSelectedInvoice] = useState<BillInvoice | null>(null);
@@ -108,7 +108,7 @@ export default function SalesContent() {
     };
   }, [pharmacyId, currentPharmacy]);
 
-  // Filtered Invoices
+  // Filtered Invoices (Date Filter & Search Feature Only)
   const filteredInvoices = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     const todayStr = new Date().toLocaleDateString("en-GB", {
@@ -117,14 +117,28 @@ export default function SalesContent() {
       year: "numeric",
     });
 
+    let targetDateStr = "";
+    if (selectedDate) {
+      const parts = selectedDate.split("-"); // YYYY, MM, DD
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        targetDateStr = d.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      }
+    }
+
     return invoices.filter((inv) => {
-      // Payment filter
-      if (filterPayment !== "All" && inv.paymentMethod !== filterPayment) return false;
+      // Date filter
+      if (targetDateStr) {
+        if (inv.date !== targetDateStr) return false;
+      } else if (filterPeriod === "today") {
+        if (inv.date !== todayStr) return false;
+      }
 
-      // Period filter
-      if (filterPeriod === "today" && inv.date !== todayStr) return false;
-
-      // Search query
+      // Search feature
       if (q) {
         const matchNo = inv.invoiceNo.toLowerCase().includes(q);
         const matchCustomer = (inv.customerName || "").toLowerCase().includes(q);
@@ -135,7 +149,7 @@ export default function SalesContent() {
 
       return true;
     });
-  }, [invoices, searchQuery, filterPayment, filterPeriod]);
+  }, [invoices, searchQuery, filterPeriod, selectedDate]);
 
   // Metrics
   const totalSales = useMemo(() => {
@@ -270,8 +284,9 @@ export default function SalesContent() {
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
+      {/* Filter and Search Bar (Date Filter & Search Feature Only) */}
       <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Search Feature */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -283,39 +298,61 @@ export default function SalesContent() {
           />
         </div>
 
+        {/* Date Filter */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Period Filter */}
           <div className="flex items-center bg-slate-100 p-0.5 rounded-md border border-slate-200/80 text-xs">
             <button
-              onClick={() => setFilterPeriod("all")}
+              onClick={() => {
+                setFilterPeriod("all");
+                setSelectedDate("");
+              }}
               className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
-                filterPeriod === "all" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                filterPeriod === "all" && !selectedDate
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
               All Time
             </button>
             <button
-              onClick={() => setFilterPeriod("today")}
+              onClick={() => {
+                setFilterPeriod("today");
+                setSelectedDate("");
+              }}
               className={`px-3 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer ${
-                filterPeriod === "today" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                filterPeriod === "today" && !selectedDate
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
               Today
             </button>
           </div>
 
-          {/* Payment Method Filter */}
-          <select
-            value={filterPayment}
-            onChange={(e) => setFilterPayment(e.target.value as any)}
-            className="px-3 py-2 rounded-md bg-white border border-slate-200 text-xs text-slate-700 font-medium focus:outline-hidden focus:border-[#5E2B9D] cursor-pointer"
-          >
-            <option value="All">All Payment Modes</option>
-            <option value="UPI">UPI</option>
-            <option value="Cash">Cash</option>
-            <option value="Card">Card</option>
-            <option value="Split">Split</option>
-          </select>
+          {/* Specific Date Picker */}
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-md text-xs">
+            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                setFilterPeriod("all");
+              }}
+              className="text-xs text-slate-700 bg-transparent focus:outline-none cursor-pointer"
+              title="Filter by specific date"
+            />
+            {selectedDate && (
+              <button
+                type="button"
+                onClick={() => setSelectedDate("")}
+                className="text-slate-400 hover:text-rose-600 text-[11px] px-1 cursor-pointer"
+                title="Clear date filter"
+              >
+                &times;
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -326,7 +363,7 @@ export default function SalesContent() {
             <Receipt className="w-12 h-12 stroke-1 text-slate-300 mb-2" />
             <h3 className="text-sm font-medium text-slate-700">No Sales Records Found</h3>
             <p className="text-xs text-slate-400 mt-1 max-w-sm">
-              {searchQuery || filterPayment !== "All" || filterPeriod !== "all"
+              {searchQuery || selectedDate || filterPeriod !== "all"
                 ? "No invoices match the current search filters. Try clearing your filters."
                 : `No sales have been recorded for ${currentPharmacy?.name || "this pharmacy"} yet.`}
             </p>

@@ -31,6 +31,10 @@ import {
   UserPlus,
   X,
   MapPin,
+  Clock,
+  Bookmark,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
@@ -47,13 +51,35 @@ import {
   fetchPharmacyCustomers,
   savePharmacyCustomer,
 } from "@/lib/customer-service";
+import { maskPhoneNumber } from "@/lib/thermal-printer";
 import BillPrintModal, { BillItem, BillInvoice } from "./BillPrintModal";
+
+export interface DraftBill {
+  id: string;
+  draftNumber: string;
+  createdAt: string;
+  date: string;
+  time: string;
+  customerName: string;
+  customerPhone?: string;
+  doctorName?: string;
+  selectedCustomer?: CustomerRecord | null;
+  items: BillItem[];
+  subtotal: number;
+  discountType: "rupees" | "percent";
+  discountValue: number;
+  grandTotal: number;
+  pharmacyId?: string;
+}
 
 const getMedicinesStorageKey = (pharmacyId?: string) =>
   pharmacyId ? `pharmacynext_medicines_${pharmacyId}` : "pharmacynext_medicines_default";
 
 const getInvoicesStorageKey = (pharmacyId?: string) =>
   pharmacyId ? `pharmacynext_invoices_${pharmacyId}` : "pharmacynext_invoices_default";
+
+const getDraftsStorageKey = (pharmacyId?: string) =>
+  pharmacyId ? `pharmacynext_drafts_${pharmacyId}` : "pharmacynext_drafts_default";
 
 export default function BillingContent() {
   const { currentPharmacy } = useAuth();
@@ -101,17 +127,34 @@ export default function BillingContent() {
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
 
+  // Saved Draft Bills state (per-pharmacy)
+  const [draftBills, setDraftBills] = useState<DraftBill[]>([]);
+  const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+
   // 1. Load Settings, Medicines, and Customers on mount or pharmacy change
   useEffect(() => {
     let isMounted = true;
     const pharmacyId = currentPharmacy?.id;
     const medStoreKey = getMedicinesStorageKey(pharmacyId);
+    const draftsKey = getDraftsStorageKey(pharmacyId);
 
     async function initData() {
       // Fetch settings strictly for current pharmacy
       const st = await fetchRemotePharmacySettings(pharmacyId, currentPharmacy || undefined);
       if (isMounted) {
         setSettings(st);
+      }
+
+      // Fetch saved draft bills strictly for current pharmacy
+      if (typeof window !== "undefined") {
+        try {
+          const savedDrafts = localStorage.getItem(draftsKey);
+          if (isMounted) {
+            setDraftBills(savedDrafts ? JSON.parse(savedDrafts) : []);
+          }
+        } catch {
+          if (isMounted) setDraftBills([]);
+        }
       }
 
       // Fetch customers strictly for current pharmacy
@@ -426,7 +469,135 @@ export default function BillingContent() {
     return Math.max(0, +(tendered - grandTotal).toFixed(2));
   }, [paymentMethod, cashTendered, grandTotal]);
 
-  // 4. Settle Bill Handler
+  // 4. Draft Bills Handlers (Local per-pharmacy storage)
+  const handleDraftBill = () => {
+    if (cartItems.length === 0) {
+      alert("Please add at least one medicine to the bill before drafting.");
+      return;
+    }
+
+    const now = new Date();
+    const draftNumber = `DFT-${now.getFullYear()}${(now.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const dateStr = now.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    const timeStr = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    const newDraft: DraftBill = {
+      id: `draft_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      draftNumber,
+      createdAt: now.toISOString(),
+      date: dateStr,
+      time: timeStr,
+      customerName: customerName.trim() || "Walk-in Customer",
+      customerPhone: customerPhone.trim() || undefined,
+      doctorName: doctorName.trim() || undefined,
+      selectedCustomer: selectedCustomer || null,
+      items: [...cartItems],
+      subtotal,
+      discountType,
+      discountValue,
+      grandTotal,
+      pharmacyId: currentPharmacy?.id,
+    };
+
+    const updatedDrafts = [newDraft, ...draftBills];
+    setDraftBills(updatedDrafts);
+    const draftsKey = getDraftsStorageKey(currentPharmacy?.id);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(draftsKey, JSON.stringify(updatedDrafts));
+      } catch (e) {
+        console.error("Failed to save draft to localStorage:", e);
+      }
+    }
+
+    // Reset current bill counter
+    setCartItems([]);
+    setCustomerName("Walk-in Customer");
+    setCustomerPhone("");
+    setDoctorName("");
+    setSelectedCustomer(null);
+    setCustomerSearchInput("");
+    setDiscountValue(0);
+    setCashTendered("");
+    setSplitCash("");
+    setSplitOnline("");
+    setTransactionRef("");
+
+    alert(`Bill successfully saved as draft (${draftNumber}). You can access it anytime from 'Saved Bills' above.`);
+  };
+
+  const handleSelectDraft = (draft: DraftBill) => {
+    if (cartItems.length > 0) {
+      const confirmOverwrite = confirm(
+        "Loading this draft will replace the items currently in your counter. Do you want to continue?"
+      );
+      if (!confirmOverwrite) return;
+    }
+
+    // Restore draft to active bill counter
+    setCartItems(draft.items);
+    setCustomerName(draft.customerName || "Walk-in Customer");
+    setCustomerPhone(draft.customerPhone || "");
+    setDoctorName(draft.doctorName || "");
+    setSelectedCustomer(draft.selectedCustomer || null);
+    if (draft.selectedCustomer) {
+      setCustomerSearchInput(draft.selectedCustomer.name);
+    } else {
+      setCustomerSearchInput("");
+    }
+    setDiscountType(draft.discountType || "percent");
+    setDiscountValue(draft.discountValue || 0);
+
+    // Remove the resumed draft from saved list
+    const updatedDrafts = draftBills.filter((d) => d.id !== draft.id);
+    setDraftBills(updatedDrafts);
+    const draftsKey = getDraftsStorageKey(currentPharmacy?.id);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(draftsKey, JSON.stringify(updatedDrafts));
+      } catch {}
+    }
+
+    setIsDraftsModalOpen(false);
+  };
+
+  const handleDeleteDraft = (draftId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this draft bill?")) return;
+
+    const updatedDrafts = draftBills.filter((d) => d.id !== draftId);
+    setDraftBills(updatedDrafts);
+    const draftsKey = getDraftsStorageKey(currentPharmacy?.id);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(draftsKey, JSON.stringify(updatedDrafts));
+      } catch {}
+    }
+  };
+
+  const handleClearAllDrafts = () => {
+    if (!confirm("Are you sure you want to clear all saved drafts?")) return;
+    setDraftBills([]);
+    const draftsKey = getDraftsStorageKey(currentPharmacy?.id);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(draftsKey);
+      } catch {}
+    }
+  };
+
+  // 5. Settle Bill Handler
   const handleSettleBill = async () => {
     if (cartItems.length === 0) {
       alert("Please add at least one medicine to the bill before settling.");
@@ -598,7 +769,30 @@ export default function BillingContent() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-50 text-[#5E2B9D] border border-purple-100 text-xs font-bold shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setIsDraftsModalOpen(true)}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-md border text-xs font-medium shadow-2xs transition-all cursor-pointer ${
+              draftBills.length > 0
+                ? "bg-purple-50 text-[#5E2B9D] border-purple-200 hover:bg-purple-100/70"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            }`}
+            title="View locally saved draft bills"
+          >
+            <Clock className="w-4 h-4 text-[#5E2B9D]" />
+            <span>Saved Bills</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                draftBills.length > 0
+                  ? "bg-[#5E2B9D] text-white"
+                  : "bg-slate-100 text-slate-500"
+              }`}
+            >
+              {draftBills.length}
+            </span>
+          </button>
+
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-md bg-purple-50 text-[#5E2B9D] border border-purple-100 text-xs font-medium shadow-2xs">
             <Receipt className="w-4 h-4" />
             <span>
               GST: {settings.gstEnabled ? `${settings.gstPercentage}% (CGST ${settings.cgstPercentage}% + SGST ${settings.sgstPercentage}%)` : "Disabled"}
@@ -876,16 +1070,30 @@ export default function BillingContent() {
                 </div>
               </div>
 
-              {cartItems.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleClearCart}
-                  className="text-[11px] text-rose-500 hover:text-rose-700 font-medium flex items-center gap-1 cursor-pointer"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  <span>Clear All</span>
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {draftBills.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDraftsModalOpen(true)}
+                    className="text-[11px] text-[#5E2B9D] hover:text-[#4D2382] font-medium flex items-center gap-1 cursor-pointer bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200"
+                    title="View and restore saved draft bills"
+                  >
+                    <Clock className="w-3 h-3" />
+                    <span>Saved ({draftBills.length})</span>
+                  </button>
+                )}
+
+                {cartItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearCart}
+                    className="text-[11px] text-rose-500 hover:text-rose-700 font-medium flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Clear All</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Customer Search & Selection */}
@@ -1331,18 +1539,31 @@ export default function BillingContent() {
               )}
             </div>
 
-            {/* Settle Bill Button */}
-            <button
-              type="button"
-              disabled={cartItems.length === 0 || isSettling}
-              onClick={handleSettleBill}
-              className="w-full py-3.5 rounded-2xl bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-sm tracking-wide shadow-lg shadow-purple-900/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Receipt className="w-5 h-5" />
-              <span>
-                {isSettling ? "Settling Invoice..." : `Settle Bill (₹${grandTotal.toFixed(2)})`}
-              </span>
-            </button>
+            {/* Action Buttons: Draft Bill & Settle Bill */}
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                disabled={cartItems.length === 0}
+                onClick={handleDraftBill}
+                className="col-span-1 h-10 rounded-md bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-slate-200"
+                title="Save this bill locally as draft and clear counter"
+              >
+                <Bookmark className="w-3.5 h-3.5 text-slate-500" />
+                <span>Draft Bill</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={cartItems.length === 0 || isSettling}
+                onClick={handleSettleBill}
+                className="col-span-2 h-10 rounded-md bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+              >
+                <Receipt className="w-4 h-4" />
+                <span>
+                  {isSettling ? "Settling Invoice..." : `Settle Bill (₹${grandTotal.toFixed(2)})`}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1423,6 +1644,158 @@ export default function BillingContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Saved Draft Bills Modal */}
+      {isDraftsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-md border border-slate-200 shadow-xl max-w-2xl w-full flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-md bg-purple-50 text-[#5E2B9D] flex items-center justify-center border border-purple-100">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-slate-900">Saved Draft Bills</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-purple-100 text-[#5E2B9D] text-[10px] font-bold">
+                      {draftBills.length} saved
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Select a draft to restore its items and customer into the active bill, then settle.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {draftBills.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAllDrafts}
+                    className="text-[11px] text-rose-500 hover:text-rose-700 font-medium px-2 py-1 rounded hover:bg-rose-50 cursor-pointer transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsDraftsModalOpen(false)}
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Drafts List */}
+            <div className="p-4 overflow-y-auto flex-1 space-y-3">
+              {draftBills.length === 0 ? (
+                <div className="py-12 text-center space-y-2">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-xs font-medium text-slate-800">No Draft Bills Saved</h4>
+                  <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+                    When a customer steps away or is collecting more items, click &quot;Draft Bill&quot; in the order summary to save it locally.
+                  </p>
+                </div>
+              ) : (
+                draftBills.map((draft) => (
+                  <div
+                    key={draft.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-md hover:bg-purple-50/30 border border-slate-200 transition-colors bg-white"
+                  >
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-medium text-[#5E2B9D] bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                          {draft.draftNumber}
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          {draft.date} • {draft.time}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="font-medium text-slate-900 truncate">
+                          {draft.customerName}
+                        </span>
+                        {draft.customerPhone && (
+                          <span className="text-slate-500 font-mono text-[11px]">
+                            ({maskPhoneNumber(draft.customerPhone)})
+                          </span>
+                        )}
+                        {draft.doctorName && (
+                          <span className="text-[11px] text-slate-400 truncate">
+                            • Dr. {draft.doctorName}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Items preview */}
+                      <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                        <span className="text-slate-400 font-medium">Items ({draft.items.length}):</span>
+                        {draft.items.slice(0, 3).map((item, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-block bg-slate-100 px-2 py-0.5 rounded text-[10px] text-slate-700"
+                          >
+                            {item.name} × {item.quantity} {item.unitType === "sheet" ? "sh" : "loose"}
+                          </span>
+                        ))}
+                        {draft.items.length > 3 && (
+                          <span className="text-[10px] text-purple-700 font-medium">
+                            +{draft.items.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right side: Amount + Actions */}
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                      <div className="text-left sm:text-right">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">Total</div>
+                        <div className="text-sm font-medium text-slate-900">
+                          ₹{draft.grandTotal.toFixed(2)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteDraft(draft.id, e)}
+                          className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Delete draft"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectDraft(draft)}
+                          className="h-8 px-3 rounded-md bg-[#5E2B9D] hover:bg-[#4D2382] text-white text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                        >
+                          <span>Select Bill</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 bg-slate-50 border-t border-slate-100 rounded-b-md flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsDraftsModalOpen(false)}
+                className="px-4 py-1.5 rounded-md bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

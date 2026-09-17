@@ -1,16 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import {
   Settings,
   ChevronDown,
   LogOut,
+  Printer,
 } from "lucide-react";
+import { getSavedPrinter, ConnectedPrinterInfo } from "@/lib/thermal-printer";
+import PrinterConnectModal from "./PrinterConnectModal";
 
 export default function TopNavbar() {
   const { user, currentPharmacy, logout } = useAuth();
+  const [isPrinterModalOpen, setIsPrinterModalOpen] = useState(false);
+  const [connectedPrinter, setConnectedPrinter] = useState<ConnectedPrinterInfo | null>(null);
+
+  useEffect(() => {
+    setConnectedPrinter(getSavedPrinter());
+  }, []);
 
   return (
     <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs h-16">
@@ -45,9 +54,29 @@ export default function TopNavbar() {
           )}
         </div>
 
-        {/* User Profile, Settings Gear & Logout on Far Right */}
+        {/* Right Section: Printer Connection, User Profile, Settings Gear & Logout */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="flex items-center gap-3 pl-3">
+          {/* Connect Thermal Printer Button */}
+          <button
+            type="button"
+            onClick={() => setIsPrinterModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer ${
+              connectedPrinter
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100"
+                : "bg-slate-50 hover:bg-purple-50 border-slate-200 hover:border-purple-200 text-slate-700 hover:text-[#5E2B9D]"
+            }`}
+            title={connectedPrinter ? `Printer: ${connectedPrinter.name}` : "Connect Thermal Printer (WebUSB / Bluetooth)"}
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">
+              {connectedPrinter ? connectedPrinter.name.slice(0, 14) : "Connect Printer"}
+            </span>
+            {connectedPrinter && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            )}
+          </button>
+
+          <div className="flex items-center gap-3 pl-2 border-l border-slate-200/80">
             <Link
               href="/settings"
               title="View Store Settings & Profile"
@@ -86,6 +115,13 @@ export default function TopNavbar() {
           </div>
         </div>
       </div>
+
+      {/* Connect Printer Modal */}
+      <PrinterConnectModal
+        isOpen={isPrinterModalOpen}
+        onClose={() => setIsPrinterModalOpen(false)}
+        onPrinterChanged={(info) => setConnectedPrinter(info)}
+      />
     </header>
   );
 }

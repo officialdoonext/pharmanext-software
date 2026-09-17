@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Printer,
   Receipt,
@@ -10,8 +10,17 @@ import {
   Download,
   Share2,
   Sparkles,
+  Zap,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { PharmacySettings } from "@/lib/pharmacy-settings";
+import {
+  maskPhoneNumber,
+  getSavedPrinter,
+  printDirectToThermalPrinter,
+  ConnectedPrinterInfo,
+} from "@/lib/thermal-printer";
 
 export interface BillItem {
   id: string;
@@ -73,11 +82,112 @@ export default function BillPrintModal({
   onStartNewBill,
 }: BillPrintModalProps) {
   const [printFormat, setPrintFormat] = useState<"thermal" | "a5">("thermal");
+  const [connectedPrinter, setConnectedPrinter] = useState<ConnectedPrinterInfo | null>(null);
+  const [isDirectPrinting, setIsDirectPrinting] = useState(false);
+  const [printStatusMessage, setPrintStatusMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setConnectedPrinter(getSavedPrinter());
+      setPrintStatusMessage(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen || !invoice) return null;
 
-  const handlePrint = () => {
-    window.print();
+  // Direct Hardware Thermal Printing (ESC/POS stream to WebUSB / WebBluetooth)
+  const handleDirectThermalPrint = async () => {
+    setIsDirectPrinting(true);
+    setPrintStatusMessage(null);
+    const res = await printDirectToThermalPrinter(invoice, settings);
+    setIsDirectPrinting(false);
+    if (res.success) {
+      setPrintStatusMessage({
+        type: "success",
+        text: `Receipt sent directly to ${connectedPrinter?.name || "Thermal Printer"}!`,
+      });
+    } else {
+      setPrintStatusMessage({
+        type: "error",
+        text: res.error || "Failed to print to hardware thermal printer. You can use Browser Print instead.",
+      });
+    }
+  };
+
+  // Isolated Browser Printing for A5 & Thermal (Strictly prints ONLY the bill)
+  const handleBrowserPrint = () => {
+    const elementId = printFormat === "thermal" ? "thermal-receipt" : "a5-invoice";
+    const element = document.getElementById(elementId);
+    if (!element) {
+      window.print();
+      return;
+    }
+
+    // Create an isolated hidden iframe so ONLY the bill prints
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.visibility = "hidden";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    const pageRules =
+      printFormat === "thermal"
+        ? `@page { size: 80mm auto; margin: 0; }
+           body { margin: 0 auto; padding: 2mm; width: 80mm; background: #fff; font-family: monospace; font-size: 11px; color: #000; }
+           * { box-sizing: border-box; }
+           #thermal-receipt { width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }`
+        : `@page { size: A5; margin: 6mm; }
+           body { margin: 0; padding: 0; width: 100%; background: #fff; font-family: system-ui, -apple-system, sans-serif; font-size: 12px; color: #000; }
+           * { box-sizing: border-box; }
+           #a5-invoice { width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+           table { width: 100%; border-collapse: collapse; }`;
+
+    let styleTags = "";
+    document.querySelectorAll("style, link[rel='stylesheet']").forEach((node) => {
+      styleTags += node.outerHTML + "\n";
+    });
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${invoice.invoiceNo} - ${settings.pharmacyName}</title>
+          ${styleTags}
+          <style>
+            ${pageRules}
+          </style>
+        </head>
+        <body>
+          ${element.outerHTML}
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        try {
+          document.body.removeChild(iframe);
+        } catch {}
+      }, 1500);
+    }, 250);
   };
 
   return (
@@ -115,6 +225,33 @@ export default function BillPrintModal({
           </button>
         </div>
 
+        {/* Status Notification for Direct Hardware Print */}
+        {printStatusMessage && (
+          <div
+            className={`px-6 py-2.5 text-xs flex items-center justify-between border-b print:hidden ${
+              printStatusMessage.type === "success"
+                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                : "bg-rose-50 text-rose-800 border-rose-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {printStatusMessage.type === "success" ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span>{printStatusMessage.text}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPrintStatusMessage(null)}
+              className="text-slate-400 hover:text-slate-600 cursor-pointer text-xs"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Format Selector Bar (Hidden during Print) */}
         <div className="px-6 py-3 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-2">
@@ -148,21 +285,53 @@ export default function BillPrintModal({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Direct Hardware Thermal Print (If printer connected & in thermal mode) */}
+            {printFormat === "thermal" && connectedPrinter && (
+              <button
+                type="button"
+                disabled={isDirectPrinting}
+                onClick={handleDirectThermalPrint}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-purple-900/20 transition-all cursor-pointer"
+                title={`Send direct ESC/POS print to ${connectedPrinter.name}`}
+              >
+                {isDirectPrinting ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Zap className="w-4 h-4 text-amber-300" />
+                )}
+                <span>
+                  {isDirectPrinting ? "Printing..." : "Direct Thermal Print"}
+                </span>
+              </button>
+            )}
+
+            {/* Isolated Browser Print */}
             <button
               type="button"
-              onClick={handlePrint}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all cursor-pointer"
+              onClick={handleBrowserPrint}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                printFormat === "thermal" && connectedPrinter
+                  ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-700/20"
+              }`}
             >
               <Printer className="w-4 h-4" />
-              <span>Print {printFormat === "thermal" ? "Thermal Slip" : "A5 Bill"}</span>
+              <span>
+                {printFormat === "thermal"
+                  ? connectedPrinter
+                    ? "Browser Print"
+                    : "Print Thermal Slip"
+                  : "Print A5 Bill"}
+              </span>
             </button>
+
             <button
               type="button"
               onClick={() => {
                 onClose();
                 onStartNewBill();
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white text-xs font-bold transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>+ New Bill</span>
@@ -227,7 +396,7 @@ export default function BillPrintModal({
                 </div>
                 <div className="flex justify-between">
                   <span>Patient: <strong>{invoice.customerName}</strong></span>
-                  {invoice.customerPhone && <span>Mob: {invoice.customerPhone}</span>}
+                  {invoice.customerPhone && <span>Mob: {maskPhoneNumber(invoice.customerPhone)}</span>}
                 </div>
                 {invoice.doctorName && (
                   <div>Dr: {invoice.doctorName}</div>
@@ -551,13 +720,41 @@ export default function BillPrintModal({
           </button>
 
           <div className="flex items-center gap-2">
+            {/* Direct Hardware Thermal Print in Footer (If printer connected & in thermal mode) */}
+            {printFormat === "thermal" && connectedPrinter && (
+              <button
+                type="button"
+                disabled={isDirectPrinting}
+                onClick={handleDirectThermalPrint}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-purple-900/20 transition-all cursor-pointer"
+                title={`Send direct ESC/POS print to ${connectedPrinter.name}`}
+              >
+                {isDirectPrinting ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Zap className="w-4 h-4 text-amber-300" />
+                )}
+                <span>{isDirectPrinting ? "Printing..." : "Direct Thermal Print"}</span>
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={handlePrint}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-700/20 transition-all cursor-pointer"
+              onClick={handleBrowserPrint}
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                printFormat === "thermal" && connectedPrinter
+                  ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-700/20"
+              }`}
             >
               <Printer className="w-4 h-4" />
-              <span>Print {printFormat === "thermal" ? "Thermal Slip" : "A5 Invoice"}</span>
+              <span>
+                {printFormat === "thermal"
+                  ? connectedPrinter
+                    ? "Browser Print"
+                    : "Print Thermal Slip"
+                  : "Print A5 Invoice"}
+              </span>
             </button>
           </div>
         </div>

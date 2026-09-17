@@ -202,20 +202,39 @@ textarea:disabled,
     color: #000 !important;
   }
 
-  /* Hide navigation, sidebar, headers, buttons, and UI chrome */
+  /* Hide navigation, sidebar, headers, buttons, and background content */
   header,
   aside,
   nav,
+  main,
   .print\:hidden {
     display: none !important;
   }
 
-  /* Ensure modal backdrop allows seamless printing */
+  /* Ensure modal backdrop allows seamless printing of bill only */
   .fixed.inset-0 {
     position: static !important;
     background: transparent !important;
     padding: 0 !important;
     display: block !important;
+    width: 100% !important;
+  }
+
+  /* Strip modal dialog container chrome so only the bill is printed */
+  .fixed.inset-0 > div {
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  .fixed.inset-0 .overflow-y-auto {
+    background: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
 
   #thermal-receipt {
