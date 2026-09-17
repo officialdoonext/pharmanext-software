@@ -1,10 +1,10 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import RetailLayout from "@/components/RetailLayout";
 import ComingSoonView from "@/components/ComingSoonView";
 import { Headphones } from "lucide-react";
 
 export default function SupportPage() {
   return (
-    <DashboardLayout>
+    <RetailLayout>
       <ComingSoonView
         title="Help & Support Desk"
         category="Customer Care"
@@ -17,6 +17,6 @@ export default function SupportPage() {
           "Hardware troubleshooting guides for barcode scanners & printers",
         ]}
       />
-    </DashboardLayout>
+    </RetailLayout>
   );
 }
