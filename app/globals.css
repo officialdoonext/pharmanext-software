@@ -93,19 +93,19 @@ dialog,
 /* ==========================================================================
    CONSTRAINT 3: Max Height of Button and Input: 40px Only
    ========================================================================== */
-button:not(.bottom-nav-action),
+button:not(.bottom-nav-action):not([class*="flex-col"]):not(.card-button):not([class*="h-auto"]):not([class*="p-3"]),
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 select,
-.btn:not(.bottom-nav-action),
-a[role="button"]:not(.bottom-nav-action) {
+.btn:not(.bottom-nav-action):not([class*="flex-col"]):not(.card-button):not([class*="h-auto"]):not([class*="p-3"]),
+a[role="button"]:not(.bottom-nav-action):not([class*="flex-col"]):not(.card-button):not([class*="h-auto"]):not([class*="p-3"]) {
   max-height: 40px !important;
   box-sizing: border-box !important;
 }
 
 /* Ensure flex/inline-flex items align nicely inside 40px max height */
-button:not(.bottom-nav-action),
-.btn:not(.bottom-nav-action),
-a[role="button"]:not(.bottom-nav-action) {
+button:not(.bottom-nav-action):not([class*="flex-col"]):not(.card-button):not([class*="h-auto"]):not([class*="p-3"]),
+.btn:not(.bottom-nav-action):not([class*="flex-col"]):not(.card-button):not([class*="h-auto"]):not([class*="p-3"]),
+a[role="button"]:not(.bottom-nav-action):not([class*="flex-col"]):not(.card-button):not([class*="h-auto"]):not([class*="p-3"]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -124,6 +124,14 @@ a[role="button"]:not(.bottom-nav-action) {
   max-height: none !important;
   height: 52px !important;
   border-radius: 14px !important;
+  cursor: pointer !important;
+}
+
+.card-button {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: none !important;
+  height: auto !important;
   cursor: pointer !important;
 }
 

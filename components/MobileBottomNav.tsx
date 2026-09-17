@@ -77,21 +77,21 @@ export default function MobileBottomNav() {
         {isStaff ? (
           // ================= STAFF ROLE NAVIGATION =================
           <>
-            {/* 1. Billing (Primary Counter) */}
+            {/* 1. Billing */}
             <Link
               href="/billing"
               className={`flex-1 bottom-nav-action transition-all duration-200 ${
                 isBillingActive
-                  ? "bg-gradient-to-tr from-[#5E2B9D] to-purple-600 text-white shadow-md shadow-purple-900/25"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 active:scale-95"
+                  ? "bg-purple-50 text-[#5E2B9D] border border-purple-200/80 shadow-2xs font-medium"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 active:scale-95 font-normal"
               }`}
             >
-              <Receipt className={`w-5 h-5 ${isBillingActive ? "text-white stroke-[2.2]" : "text-slate-500"}`} />
-              <span className={`text-[10px] leading-tight mt-0.5 ${isBillingActive ? "font-medium text-white" : "text-slate-600"}`}>
+              <Receipt className={`w-5 h-5 ${isBillingActive ? "text-[#5E2B9D] stroke-[2.2]" : "text-slate-500"}`} />
+              <span className={`text-[10px] leading-tight mt-0.5 ${isBillingActive ? "font-medium text-[#5E2B9D]" : "text-slate-600"}`}>
                 Billing
               </span>
               {isBillingActive && (
-                <span className="w-1 h-1 rounded-full bg-white mt-0.5"></span>
+                <span className="w-1 h-1 rounded-full bg-[#5E2B9D] mt-0.5"></span>
               )}
             </Link>
 
@@ -100,8 +100,8 @@ export default function MobileBottomNav() {
               href="/sales"
               className={`flex-1 bottom-nav-action transition-all duration-200 ${
                 isSalesActive
-                  ? "bg-purple-50 text-[#5E2B9D] border border-purple-200/80 shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 active:scale-95"
+                  ? "bg-purple-50 text-[#5E2B9D] border border-purple-200/80 shadow-2xs font-medium"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 active:scale-95 font-normal"
               }`}
             >
               <TrendingUp className={`w-5 h-5 ${isSalesActive ? "text-[#5E2B9D] stroke-[2.2]" : "text-slate-500"}`} />
@@ -149,7 +149,7 @@ export default function MobileBottomNav() {
               className={`flex-1 bottom-nav-action transition-all duration-200 ${
                 isDashboardActive
                   ? "bg-purple-50 text-[#5E2B9D] border border-purple-200/80 shadow-2xs font-medium"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 active:scale-95"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 active:scale-95 font-normal"
               }`}
             >
               <Home className={`w-5 h-5 ${isDashboardActive ? "text-[#5E2B9D] stroke-[2.2]" : "text-slate-500"}`} />
@@ -161,21 +161,21 @@ export default function MobileBottomNav() {
               )}
             </Link>
 
-            {/* 2. Billing (Hero Counter Action) */}
+            {/* 2. Billing */}
             <Link
               href="/billing"
               className={`flex-1 bottom-nav-action transition-all duration-200 ${
                 isBillingActive
-                  ? "bg-gradient-to-tr from-[#5E2B9D] to-purple-600 text-white shadow-md shadow-purple-900/25 -translate-y-0.5"
-                  : "text-[#5E2B9D] bg-purple-50/70 hover:bg-purple-100/70 border border-purple-200/60 active:scale-95"
+                  ? "bg-purple-50 text-[#5E2B9D] border border-purple-200/80 shadow-2xs font-medium"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 active:scale-95 font-normal"
               }`}
             >
-              <Receipt className={`w-5 h-5 ${isBillingActive ? "text-white stroke-[2.2]" : "text-[#5E2B9D]"}`} />
-              <span className={`text-[10px] leading-tight mt-0.5 truncate max-w-[52px] font-medium ${isBillingActive ? "text-white" : "text-[#5E2B9D]"}`}>
+              <Receipt className={`w-5 h-5 ${isBillingActive ? "text-[#5E2B9D] stroke-[2.2]" : "text-slate-500"}`} />
+              <span className={`text-[10px] leading-tight mt-0.5 truncate max-w-[52px] ${isBillingActive ? "font-medium text-[#5E2B9D]" : "text-slate-600"}`}>
                 Billing
               </span>
               {isBillingActive && (
-                <span className="w-1 h-1 rounded-full bg-white mt-0.5"></span>
+                <span className="w-1 h-1 rounded-full bg-[#5E2B9D] mt-0.5"></span>
               )}
             </Link>
 
@@ -407,14 +407,14 @@ export default function MobileBottomNav() {
                   setIsMoreOpen(false);
                   setIsPrinterModalOpen(true);
                 }}
-                className="p-3 rounded-xl border bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200 flex flex-col gap-1 transition-all text-left group cursor-pointer"
+                className="w-full p-3 rounded-xl border bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200 flex flex-col gap-1 transition-all text-left group cursor-pointer card-button !h-auto !max-h-none"
               >
-                <div className="flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                <div className="w-full flex items-center justify-between">
+                  <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
                     <Printer className="w-4 h-4" />
                   </div>
                   {connectedPrinter ? (
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                   ) : (
                     <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
                   )}
