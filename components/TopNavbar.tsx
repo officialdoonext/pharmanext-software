@@ -77,32 +77,50 @@ export default function TopNavbar() {
           </button>
 
           <div className="flex items-center gap-3 pl-2 border-l border-slate-200/80">
-            <Link
-              href="/settings"
-              title="View Store Settings & Profile"
-              className="flex items-center gap-2.5 group cursor-pointer"
-            >
-              <div className="w-9 h-9 rounded-md bg-gradient-to-tr from-[#5E2B9D] to-purple-600 ring-2 ring-purple-100 flex items-center justify-center text-white text-xs font-medium shadow-xs shrink-0 group-hover:ring-purple-300 transition-all">
-                {user ? user.name.slice(0, 2).toUpperCase() : "SK"}
+            {user?.role === "staff" ? (
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-md bg-purple-100 border border-purple-200 flex items-center justify-center text-[#5E2B9D] text-xs font-medium shrink-0">
+                  {user ? user.name.slice(0, 2).toUpperCase() : "ST"}
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-medium text-slate-900 leading-tight">
+                    {user?.name || "Counter Staff"}
+                  </span>
+                  <span className="text-[10px] font-medium text-[#5E2B9D] leading-tight">
+                    Counter Staff
+                  </span>
+                </div>
               </div>
-              <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-medium text-slate-900 group-hover:text-[#5E2B9D] leading-tight transition-colors">
-                  {user?.name || "Siva Krishna"}
-                </span>
-                <span className="text-[11px] font-normal text-slate-400 leading-tight capitalize">
-                  {user?.role ? `${user.role} Admin` : "Store Admin"}
-                </span>
-              </div>
-            </Link>
+            ) : (
+              <Link
+                href="/settings"
+                title="View Store Settings & Profile"
+                className="flex items-center gap-2.5 group cursor-pointer"
+              >
+                <div className="w-9 h-9 rounded-md bg-gradient-to-tr from-[#5E2B9D] to-purple-600 ring-2 ring-purple-100 flex items-center justify-center text-white text-xs font-medium shadow-xs shrink-0 group-hover:ring-purple-300 transition-all">
+                  {user ? user.name.slice(0, 2).toUpperCase() : "SK"}
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-medium text-slate-900 group-hover:text-[#5E2B9D] leading-tight transition-colors">
+                    {user?.name || "Siva Krishna"}
+                  </span>
+                  <span className="text-[11px] font-normal text-slate-400 leading-tight capitalize">
+                    {user?.role ? `${user.role} Admin` : "Store Admin"}
+                  </span>
+                </div>
+              </Link>
+            )}
 
-            {/* Direct Settings Gear button */}
-            <Link
-              href="/settings"
-              title="Store Settings & GST"
-              className="p-2 rounded-md text-slate-400 hover:text-[#5E2B9D] hover:bg-purple-50 transition-colors cursor-pointer"
-            >
-              <Settings className="w-4 h-4" />
-            </Link>
+            {/* Direct Settings Gear button (Admin only) */}
+            {user?.role !== "staff" && (
+              <Link
+                href="/settings"
+                title="Store Settings & GST"
+                className="p-2 rounded-md text-slate-400 hover:text-[#5E2B9D] hover:bg-purple-50 transition-colors cursor-pointer"
+              >
+                <Settings className="w-4 h-4" />
+              </Link>
+            )}
 
             {/* Logout button */}
             <button

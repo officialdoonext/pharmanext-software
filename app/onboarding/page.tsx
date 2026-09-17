@@ -56,6 +56,11 @@ export default function OnboardingPage() {
     ) {
       return false;
     }
+    // If staff user, ONLY display pharmacies where they are registered
+    if (user?.role === "staff") {
+      const assigned = user.assignedPharmacyIds || (user.storeId ? [user.storeId] : []);
+      return assigned.includes(p.id);
+    }
     if (!user?.email) return true;
     return !p.ownerEmail || p.ownerEmail.toLowerCase() === user.email.toLowerCase();
   });
@@ -91,7 +96,11 @@ export default function OnboardingPage() {
 
     if (check.success) {
       // Access granted! Move to software
-      router.push("/medicines");
+      if (user?.role === "staff") {
+        router.push("/billing");
+      } else {
+        router.push("/medicines");
+      }
     } else {
       // Access denied! Show security gate modal
       setDeniedModalData({
@@ -151,20 +160,24 @@ export default function OnboardingPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Pharmacy Stores
+              {user?.role === "staff" ? "Select Counter Pharmacy" : "Pharmacy Stores"}
             </h1>
             <p className="text-xs text-slate-500 mt-1">
-              Select an active, verified pharmacy to launch the software or register a new store.
+              {user?.role === "staff"
+                ? `Welcome ${user?.name || "Staff"}. Select your authorized pharmacy branch to launch the billing counter.`
+                : "Select an active, verified pharmacy to launch the software or register a new store."}
             </p>
           </div>
 
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs tracking-wide shadow-md shadow-purple-500/20 transition-all cursor-pointer w-fit"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add New Pharmacy</span>
-          </button>
+          {user?.role !== "staff" && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs tracking-wide shadow-md shadow-purple-500/20 transition-all cursor-pointer w-fit"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add New Pharmacy</span>
+            </button>
+          )}
         </div>
 
         {/* Security Rule Notice Banner */}
@@ -183,17 +196,23 @@ export default function OnboardingPage() {
         {displayedPharmacies.length === 0 ? (
           <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center max-w-md mx-auto">
             <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-900">No Pharmacy Stores Found</h3>
+            <h3 className="text-lg font-bold text-slate-900">
+              {user?.role === "staff" ? "No Assigned Pharmacies" : "No Pharmacy Stores Found"}
+            </h3>
             <p className="text-xs text-slate-500 mt-1 mb-6">
-              You do not have any registered pharmacies under this account. Click below to add your first real pharmacy.
+              {user?.role === "staff"
+                ? "Your staff profile is not currently assigned to an active branch. Please contact your store administrator."
+                : "You do not have any registered pharmacies under this account. Click below to add your first real pharmacy."}
             </p>
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs shadow-sm cursor-pointer inline-flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Register Your First Pharmacy</span>
-            </button>
+            {user?.role !== "staff" && (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="px-5 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white font-bold text-xs shadow-sm cursor-pointer inline-flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Register Your First Pharmacy</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

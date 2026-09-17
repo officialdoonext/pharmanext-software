@@ -5,6 +5,7 @@ export interface User {
   role: "admin" | "staff";
   storeId?: string;
   phone?: string;
+  assignedPharmacyIds?: string[];
 }
 
 export interface Pharmacy {

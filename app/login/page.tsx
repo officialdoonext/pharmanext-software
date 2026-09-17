@@ -15,22 +15,36 @@ import {
   AlertCircle,
   CheckCircle2,
   Building2,
+  Phone,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { sendAdminOtp, verifyAdminOtp, loginStaff, isAuthenticated, currentPharmacy } = useAuth();
+  const {
+    sendAdminOtp,
+    verifyAdminOtp,
+    loginStaffByMpin,
+    isAuthenticated,
+    currentPharmacy,
+    user,
+  } = useAuth();
 
-  // If already authenticated with active pharmacy, can go to dashboard
+  // If already authenticated with active pharmacy, redirect appropriately
   useEffect(() => {
     if (isAuthenticated) {
       if (currentPharmacy && currentPharmacy.status === "active" && currentPharmacy.expiryDate) {
-        router.push("/medicines");
+        if (user?.role === "staff") {
+          router.push("/billing");
+        } else {
+          router.push("/medicines");
+        }
       } else {
         router.push("/onboarding");
       }
     }
-  }, [isAuthenticated, currentPharmacy, router]);
+  }, [isAuthenticated, currentPharmacy, user, router]);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"admin" | "staff">("admin");
@@ -46,9 +60,9 @@ export default function LoginPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Staff Login States
-  const [storeCode, setStoreCode] = useState("");
-  const [staffUsername, setStaffUsername] = useState("");
-  const [staffPassword, setStaffPassword] = useState("");
+  const [staffMobile, setStaffMobile] = useState("");
+  const [staffMpin, setStaffMpin] = useState("");
+  const [showStaffMpin, setShowStaffMpin] = useState(false);
   const [isStaffSubmitting, setIsStaffSubmitting] = useState(false);
 
   // OTP Input Refs
@@ -171,24 +185,29 @@ export default function LoginPage() {
     }
   };
 
-  // Handle Staff Login
+  // Handle Staff Login (Mobile + MPIN)
   const handleStaffLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
     setIsStaffSubmitting(true);
 
     try {
-      const res = await loginStaff(storeCode, staffUsername, staffPassword);
+      const res = await loginStaffByMpin(staffMobile, staffMpin);
       if (res.success) {
-        setSuccessMessage("Staff authenticated. Loading store session...");
+        setSuccessMessage("Staff verified successfully. Loading counter session...");
         setTimeout(() => {
-          router.push("/medicines");
-        }, 600);
+          if (res.pharmacyCount === 1) {
+            router.push("/billing");
+          } else {
+            router.push("/onboarding");
+          }
+        }, 500);
       } else {
         setErrorMessage(res.message);
       }
     } catch (err) {
-      setErrorMessage("Authentication failed.");
+      setErrorMessage("Authentication encountered an error. Please try again.");
     } finally {
       setIsStaffSubmitting(false);
     }
@@ -408,53 +427,56 @@ export default function LoginPage() {
           <form onSubmit={handleStaffLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Pharmacy Store Code
+                Staff Mobile Number
               </label>
               <div className="relative">
-                <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                 <input
-                  type="text"
+                  type="tel"
                   required
-                  value={storeCode}
-                  onChange={(e) => setStoreCode(e.target.value)}
-                  placeholder="e.g. PHARM-XXXX"
+                  maxLength={10}
+                  value={staffMobile}
+                  onChange={(e) => setStaffMobile(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder="e.g. 9876543210"
                   className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all font-mono"
                 />
               </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Enter your 10-digit registered counter mobile number
+              </p>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Staff Email / Username
+                Counter MPIN
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                 <input
-                  type="text"
+                  type={showStaffMpin ? "text" : "password"}
+                  inputMode="numeric"
                   required
-                  value={staffUsername}
-                  onChange={(e) => setStaffUsername(e.target.value)}
-                  placeholder="pharmacist_rahul"
-                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all"
+                  maxLength={6}
+                  value={staffMpin}
+                  onChange={(e) => setStaffMpin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="4 to 6 digit MPIN"
+                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all font-mono tracking-widest"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowStaffMpin(!showStaffMpin)}
+                  className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showStaffMpin ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Staff Password / PIN
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
-                <input
-                  type="password"
-                  required
-                  value={staffPassword}
-                  onChange={(e) => setStaffPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-[#5E2B9D] focus:ring-2 focus:ring-purple-100 transition-all"
-                />
-              </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Enter your secret 4-6 digit counter login MPIN
+              </p>
             </div>
 
             <button
@@ -465,11 +487,11 @@ export default function LoginPage() {
               {isStaffSubmitting ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Signing In...</span>
+                  <span>Verifying Staff Credentials...</span>
                 </>
               ) : (
                 <>
-                  <span>Staff Secure Sign In</span>
+                  <span>Sign In as Staff</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { APP_CONFIG } from "./config";
 
 import { db } from "./firebase";
-import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, updateDoc, query, where } from "firebase/firestore";
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +17,7 @@ interface AuthContextType {
   sendAdminOtp: (email: string) => Promise<{ success: boolean; message: string }>;
   verifyAdminOtp: (email: string, enteredOtp: string) => Promise<{ success: boolean; message: string }>;
   loginStaff: (storeCode: string, identifier: string, pass: string) => Promise<{ success: boolean; message: string }>;
+  loginStaffByMpin: (mobile: string, mpin: string) => Promise<{ success: boolean; message: string; pharmacyCount: number }>;
   addPharmacy: (data: { name: string; address: string; phone?: string; licenseNo?: string }) => Pharmacy;
   togglePharmacyActivation: (pharmacyId: string, days?: number) => void;
   selectPharmacy: (pharmacyId: string) => { success: boolean; reason?: "inactive" | "no_expiry" | "expired" };
@@ -256,6 +257,134 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true, message: "Staff authenticated." };
   };
 
+  // Staff Login using Mobile Number + MPIN
+  const loginStaffByMpin = async (
+    mobile: string,
+    enteredMpin: string
+  ): Promise<{ success: boolean; message: string; pharmacyCount: number }> => {
+    const cleanMobile = mobile.replace(/\D/g, "").slice(-10);
+    const cleanMpin = enteredMpin.trim();
+
+    if (!cleanMobile || cleanMobile.length !== 10) {
+      return { success: false, message: "Please enter a valid 10-digit mobile number.", pharmacyCount: 0 };
+    }
+    if (!cleanMpin || cleanMpin.length < 4) {
+      return { success: false, message: "Please enter your 4-6 digit MPIN.", pharmacyCount: 0 };
+    }
+
+    // 1. Search for staff matching this phone in Firestore
+    let matchingStaffDocs: any[] = [];
+    try {
+      const q = query(collection(db, "staff"), where("phone", "==", cleanMobile));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        snap.forEach((docSnap) => {
+          matchingStaffDocs.push(docSnap.data());
+        });
+      }
+    } catch (e) {
+      console.warn("Firestore staff search note:", e);
+    }
+
+    // 2. Also search local storage across pharmacynext_staff_* keys as fallback / offline cache
+    if (typeof window !== "undefined") {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("pharmacynext_staff_")) {
+            const raw = localStorage.getItem(key);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                for (const item of parsed) {
+                  const itemPhone = (item.phone || "").replace(/\D/g, "").slice(-10);
+                  if (itemPhone === cleanMobile) {
+                    if (!matchingStaffDocs.some((m) => m.id === item.id)) {
+                      matchingStaffDocs.push(item);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("LocalStorage staff scan error:", err);
+      }
+    }
+
+    if (matchingStaffDocs.length === 0) {
+      return {
+        success: false,
+        message: "No staff account found for this mobile number. Please ask your pharmacy admin to add you.",
+        pharmacyCount: 0,
+      };
+    }
+
+    // 3. Verify MPIN & active status
+    const validMatches = matchingStaffDocs.filter(
+      (staff) => staff.mpin === cleanMpin && staff.status !== "Inactive"
+    );
+
+    if (validMatches.length === 0) {
+      return {
+        success: false,
+        message: "Incorrect MPIN. Please enter the valid counter MPIN.",
+        pharmacyCount: 0,
+      };
+    }
+
+    // 4. Collect all unique pharmacy IDs associated with this staff member
+    const assignedPharmacyIds = Array.from(
+      new Set(validMatches.map((m) => m.pharmacyId).filter(Boolean))
+    ) as string[];
+
+    if (assignedPharmacyIds.length === 0) {
+      return {
+        success: false,
+        message: "Your staff account is not assigned to any active pharmacy branch.",
+        pharmacyCount: 0,
+      };
+    }
+
+    const primaryStaff = validMatches[0];
+    const staffUser: User = {
+      id: primaryStaff.id || `staff_${cleanMobile}`,
+      name: primaryStaff.name || "Counter Cashier",
+      phone: cleanMobile,
+      email: `${cleanMobile}@staff.pharmacynext.com`,
+      role: "staff",
+      storeId: assignedPharmacyIds[0],
+      assignedPharmacyIds,
+    };
+
+    setUser(staffUser);
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(staffUser));
+
+    // If assigned to exactly 1 pharmacy, check if we can pre-select it
+    if (assignedPharmacyIds.length === 1) {
+      const targetPharmacyId = assignedPharmacyIds[0];
+      const targetPharm = pharmacies.find((p) => p.id === targetPharmacyId);
+      if (targetPharm) {
+        const canEnter =
+          targetPharm.status === "active" &&
+          targetPharm.expiryDate !== null &&
+          new Date(targetPharm.expiryDate) > new Date();
+
+        if (canEnter) {
+          setCurrentPharmacy(targetPharm);
+          localStorage.setItem(STORAGE_KEYS.CURRENT_PHARMACY, JSON.stringify(targetPharm));
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message: "Staff authenticated successfully.",
+      pharmacyCount: assignedPharmacyIds.length,
+    };
+  };
+
   // Add Pharmacy - strictly saved with expiryDate: null and status: "inactive"
   const addPharmacy = (data: {
     name: string;
@@ -383,6 +512,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sendAdminOtp,
         verifyAdminOtp,
         loginStaff,
+        loginStaffByMpin,
         addPharmacy,
         togglePharmacyActivation,
         selectPharmacy,

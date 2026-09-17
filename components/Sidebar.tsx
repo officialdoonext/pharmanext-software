@@ -35,14 +35,21 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (user?.role === "staff") {
+      return item.href === "/billing" || item.href === "/sales";
+    }
+    return true;
+  });
 
   return (
     <aside className="w-[80px] min-w-[80px] max-w-[80px] bg-white border-r border-slate-200/80 flex flex-col justify-between shrink-0 min-h-screen select-none sticky top-0 h-screen z-40">
       {/* Top Brand Logo */}
       <div className="h-16 flex items-center justify-center border-b border-slate-100 shrink-0">
         <Link
-          href="/medicines"
+          href={user?.role === "staff" ? "/billing" : "/medicines"}
           className="w-10 h-10 rounded-md overflow-hidden flex items-center justify-center p-1 bg-white border border-slate-200/80 hover:scale-105 transition-transform"
           title="PharmaNext"
         >
@@ -57,7 +64,7 @@ export default function Sidebar() {
 
       {/* Menu list with Icon on Top and Text on Bottom */}
       <nav className="flex-1 py-3 px-1.5 space-y-1.5 overflow-y-auto overflow-x-hidden">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const Icon = item.icon;
           const isMedicinesActive =
             item.href === "/medicines" &&
