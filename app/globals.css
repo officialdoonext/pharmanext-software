@@ -238,9 +238,10 @@ textarea:disabled,
   }
 
   #thermal-receipt {
-    max-width: 80mm !important;
-    width: 80mm !important;
-    margin: 0 auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
     border: none !important;
     box-shadow: none !important;
     padding: 2mm !important;

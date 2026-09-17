@@ -136,7 +136,7 @@ export async function disconnectPrinter() {
   savePrinter(null);
 }
 
-// Generate ESC/POS Binary Buffer for 58mm / 80mm Thermal Receipt
+// Generate ESC/POS Binary Buffer for 80mm Thermal Receipt (Full 48-Column Width)
 export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
   const encoder = new TextEncoder();
   const bytes: number[] = [];
@@ -148,6 +148,16 @@ export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
 
   const addCmd = (...cmds: number[]) => {
     bytes.push(...cmds);
+  };
+
+  const LINE_WIDTH = 48;
+
+  // Helper to format two columns spanning the exact full line width
+  const formatTwoCols = (left: string, right: string, width = LINE_WIDTH) => {
+    const maxLeft = Math.max(0, width - right.length - 1);
+    const truncLeft = left.length > maxLeft ? left.slice(0, maxLeft) : left;
+    const spaces = Math.max(1, width - truncLeft.length - right.length);
+    return truncLeft + " ".repeat(spaces) + right + "\n";
   };
 
   // 1. Initialize Printer (ESC @)
@@ -180,59 +190,67 @@ export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
   }
   addText("*** RETAIL TAX INVOICE ***\n");
 
-  // 3. Invoice Metadata (Left Aligned)
+  // 3. Invoice Metadata (Left Aligned, Full Width)
   addCmd(0x1b, 0x61, 0x00); // Left
-  addText("--------------------------------\n");
-  addText(`Bill No: ${invoice.invoiceNo}\n`);
-  addText(`Date: ${invoice.date}  ${invoice.time}\n`);
-  addText(`Patient: ${invoice.customerName}\n`);
-  if (invoice.customerPhone) {
-    addText(`Mobile:  ${maskPhoneNumber(invoice.customerPhone)}\n`);
-  }
+  addText("-".repeat(LINE_WIDTH) + "\n");
+  addText(formatTwoCols(`Bill No: ${invoice.invoiceNo}`, `Date: ${invoice.date}`));
+  addText(formatTwoCols(`Time: ${invoice.time}`, `Payment: ${invoice.paymentMethod}`));
+  addText(
+    formatTwoCols(
+      `Patient: ${invoice.customerName}`,
+      invoice.customerPhone ? `Mob: ${maskPhoneNumber(invoice.customerPhone)}` : ""
+    )
+  );
   if (invoice.doctorName) {
     addText(`Doctor:  Dr. ${invoice.doctorName}\n`);
   }
-  addText(`Payment: ${invoice.paymentMethod}\n`);
-  addText("--------------------------------\n");
+  addText("-".repeat(LINE_WIDTH) + "\n");
 
-  // 4. Items Table (32 Columns Standard)
-  addText("Item               Qty  Rate   Amt\n");
-  addText("--------------------------------\n");
+  // 4. Items Table (48 Columns Full Width: 22 chars name, 5 qty, 8 rate, 10 amt)
+  addText("Item                     Qty     Rate        Amt\n");
+  addText("-".repeat(LINE_WIDTH) + "\n");
 
   for (const item of invoice.items || []) {
     const rawName = item.name || "Item";
-    const nameStr = rawName.length > 17 ? rawName.slice(0, 16) + "." : rawName.padEnd(17, " ");
-    const qtyStr = String(item.quantity).padStart(3, " ");
-    const rateStr = Number(item.rate).toFixed(0).padStart(5, " ");
-    const amtStr = Number(item.amount).toFixed(0).padStart(5, " ");
+    const nameStr = rawName.length > 22 ? rawName.slice(0, 21) + "." : rawName.padEnd(22, " ");
+    const qtyStr = String(item.quantity).padStart(5, " ");
+    const rateStr = Number(item.rate).toFixed(2).padStart(8, " ");
+    const amtStr = Number(item.amount).toFixed(2).padStart(10, " ");
     addText(`${nameStr} ${qtyStr} ${rateStr} ${amtStr}\n`);
   }
 
-  addText("--------------------------------\n");
+  addText("-".repeat(LINE_WIDTH) + "\n");
 
-  // 5. Totals Breakdown
-  addText(`Subtotal:             Rs. ${Number(invoice.subtotal).toFixed(2)}\n`);
+  // 5. Totals Breakdown (Full Width)
+  addText(formatTwoCols("Subtotal:", "Rs. " + Number(invoice.subtotal).toFixed(2)));
 
   if (invoice.discountAmount > 0) {
-    addText(`Discount:            -Rs. ${Number(invoice.discountAmount).toFixed(2)}\n`);
+    addText(formatTwoCols("Discount:", "-Rs. " + Number(invoice.discountAmount).toFixed(2)));
   }
 
   if (invoice.gstEnabled && invoice.totalGstAmount > 0) {
-    addText(`GST (${invoice.gstPercentage}%):         Rs. ${Number(invoice.totalGstAmount).toFixed(2)}\n`);
+    addText(
+      formatTwoCols(
+        `GST (${invoice.gstPercentage}%):`,
+        "Rs. " + Number(invoice.totalGstAmount).toFixed(2)
+      )
+    );
   }
 
   if (invoice.roundOff !== 0) {
     const sign = invoice.roundOff > 0 ? "+" : "";
-    addText(`Round Off:            Rs. ${sign}${Number(invoice.roundOff).toFixed(2)}\n`);
+    addText(
+      formatTwoCols("Round Off:", "Rs. " + sign + Number(invoice.roundOff).toFixed(2))
+    );
   }
 
-  addText("--------------------------------\n");
+  addText("-".repeat(LINE_WIDTH) + "\n");
 
-  // Grand Total (Bold)
+  // Grand Total (Bold, Full Width)
   addCmd(0x1b, 0x45, 0x01); // Bold ON
-  addText(`GRAND TOTAL:          Rs. ${Number(invoice.grandTotal).toFixed(2)}\n`);
+  addText(formatTwoCols("GRAND TOTAL:", "Rs. " + Number(invoice.grandTotal).toFixed(2)));
   addCmd(0x1b, 0x45, 0x00); // Bold OFF
-  addText("--------------------------------\n");
+  addText("-".repeat(LINE_WIDTH) + "\n");
 
   // 6. Footer (Center Aligned)
   addCmd(0x1b, 0x61, 0x01); // Center

@@ -3,19 +3,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
-  TrendingUp,
   Receipt,
   Search,
-  Filter,
   Calendar,
   Printer,
   Plus,
-  Store,
-  CreditCard,
-  Banknote,
-  Smartphone,
-  Layers,
-  ArrowUpDown,
   Download,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -151,23 +143,6 @@ export default function SalesContent() {
     });
   }, [invoices, searchQuery, filterPeriod, selectedDate]);
 
-  // Metrics
-  const totalSales = useMemo(() => {
-    return filteredInvoices.reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-  }, [filteredInvoices]);
-
-  const cashSales = useMemo(() => {
-    return filteredInvoices
-      .filter((inv) => inv.paymentMethod === "Cash")
-      .reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-  }, [filteredInvoices]);
-
-  const digitalSales = useMemo(() => {
-    return filteredInvoices
-      .filter((inv) => inv.paymentMethod === "UPI" || inv.paymentMethod === "Card")
-      .reduce((sum, inv) => sum + (inv.grandTotal || 0), 0);
-  }, [filteredInvoices]);
-
   const openInvoicePrint = (inv: BillInvoice) => {
     setSelectedInvoice(inv);
     setIsPrintModalOpen(true);
@@ -246,41 +221,6 @@ export default function SalesContent() {
             <Plus className="w-3.5 h-3.5" />
             <span>New Bill</span>
           </Link>
-        </div>
-      </div>
-
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs">
-          <span className="text-xs font-medium text-slate-500">Filtered Sales Revenue</span>
-          <div className="mt-2 text-2xl font-medium text-slate-900">
-            ₹{totalSales.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">Across {filteredInvoices.length} selected bills</p>
-        </div>
-
-        <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs">
-          <span className="text-xs font-medium text-slate-500">Total Invoices</span>
-          <div className="mt-2 text-2xl font-medium text-slate-900">
-            {filteredInvoices.length}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">Settled transactions</p>
-        </div>
-
-        <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs">
-          <span className="text-xs font-medium text-slate-500">Cash Collections</span>
-          <div className="mt-2 text-2xl font-medium text-emerald-600">
-            ₹{cashSales.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">Direct physical cash received</p>
-        </div>
-
-        <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs">
-          <span className="text-xs font-medium text-slate-500">UPI / Digital Collections</span>
-          <div className="mt-2 text-2xl font-medium text-[#5E2B9D]">
-            ₹{digitalSales.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">QR UPI & Card settlements</p>
         </div>
       </div>
 

@@ -145,10 +145,30 @@ export default function BillPrintModal({
 
     const pageRules =
       printFormat === "thermal"
-        ? `@page { size: 80mm auto; margin: 0; }
-           body { margin: 0 auto; padding: 2mm; width: 80mm; background: #fff; font-family: monospace; font-size: 11px; color: #000; }
-           * { box-sizing: border-box; }
-           #thermal-receipt { width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; }`
+        ? `@page { size: auto; margin: 0; }
+           html, body {
+             margin: 0 !important;
+             padding: 0 !important;
+             width: 100% !important;
+             background: #fff !important;
+             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace !important;
+             font-size: 11.5px !important;
+             color: #000 !important;
+           }
+           * { box-sizing: border-box !important; }
+           #thermal-receipt {
+             width: 100% !important;
+             max-width: 100% !important;
+             min-width: 100% !important;
+             border: none !important;
+             box-shadow: none !important;
+             padding: 2mm 3mm !important;
+             margin: 0 !important;
+           }
+           table { width: 100% !important; border-collapse: collapse !important; }
+           .w-full { width: 100% !important; }
+           .flex { display: flex !important; width: 100% !important; justify-content: space-between !important; }
+           .justify-between { justify-content: space-between !important; }`
         : `@page { size: A5; margin: 6mm; }
            body { margin: 0; padding: 0; width: 100%; background: #fff; font-family: system-ui, -apple-system, sans-serif; font-size: 12px; color: #000; }
            * { box-sizing: border-box; }
@@ -342,14 +362,14 @@ export default function BillPrintModal({
         {/* Printable Area */}
         <div className="p-6 overflow-y-auto flex-1 bg-slate-50 flex justify-center">
           
-          {/* 1. THERMAL PRINT PREVIEW (80mm / 300px) */}
+          {/* 1. THERMAL PRINT PREVIEW (80mm / 3-inch full width) */}
           {printFormat === "thermal" && (
             <div
               id="thermal-receipt"
-              className="bg-white p-5 w-full max-w-[340px] border border-slate-300 shadow-md font-mono text-[11px] text-slate-900 space-y-2 select-text"
+              className="bg-white p-4 sm:p-5 w-full max-w-[420px] border border-slate-300 shadow-md font-mono text-[11px] text-slate-900 space-y-2 select-text"
             >
               {/* Thermal Header */}
-              <div className="text-center border-b border-dashed border-slate-400 pb-2.5">
+              <div className="text-center border-b border-dashed border-slate-400 pb-2.5 w-full">
                 <h2 className="text-sm font-black uppercase tracking-tight text-slate-950">
                   {settings.pharmacyName}
                 </h2>
@@ -385,49 +405,55 @@ export default function BillPrintModal({
               </div>
 
               {/* Invoice Metadata */}
-              <div className="text-[10px] space-y-0.5 border-b border-dashed border-slate-400 py-1.5">
-                <div className="flex justify-between">
+              <div className="text-[10px] space-y-0.5 border-b border-dashed border-slate-400 py-1.5 w-full">
+                <div className="flex justify-between w-full">
                   <span>Bill No: <strong>{invoice.invoiceNo}</strong></span>
                   <span>Date: {invoice.date}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between w-full">
                   <span>Time: {invoice.time}</span>
                   <span>Pay: <strong>{invoice.paymentMethod}</strong></span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between w-full">
                   <span>Patient: <strong>{invoice.customerName}</strong></span>
                   {invoice.customerPhone && <span>Mob: {maskPhoneNumber(invoice.customerPhone)}</span>}
                 </div>
                 {invoice.doctorName && (
-                  <div>Dr: {invoice.doctorName}</div>
+                  <div className="w-full">Dr: {invoice.doctorName}</div>
                 )}
               </div>
 
-              {/* Items Table */}
-              <div className="border-b border-dashed border-slate-400 py-1.5 space-y-1">
-                <div className="flex justify-between font-bold text-[10px] border-b border-slate-200 pb-1">
-                  <span className="w-1/2">ITEM</span>
-                  <span className="w-1/4 text-center">QTY</span>
-                  <span className="w-1/4 text-right">AMT (₹)</span>
-                </div>
-                {invoice.items.map((it, idx) => (
-                  <div key={idx} className="flex justify-between text-[10px] leading-tight">
-                    <div className="w-1/2 pr-1">
-                      <span className="font-bold block">{it.name}</span>
-                      {it.batchNumber && (
-                        <span className="text-[9px] text-slate-500 block">
-                          B:{it.batchNumber} {it.expiryDate ? `E:${it.expiryDate}` : ""}
-                        </span>
-                      )}
-                    </div>
-                    <div className="w-1/4 text-center text-[10px]">
-                      {it.quantity} {it.unitType === "sheet" ? "sh" : "pcs"}
-                    </div>
-                    <div className="w-1/4 text-right font-medium">
-                      {it.amount.toFixed(2)}
-                    </div>
-                  </div>
-                ))}
+              {/* Items Table - 100% Full Width */}
+              <div className="border-b border-dashed border-slate-400 py-1.5 w-full">
+                <table className="w-full text-[10.5px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-300 font-bold">
+                      <th className="py-1 text-left">ITEM</th>
+                      <th className="py-1 text-center w-14">QTY</th>
+                      <th className="py-1 text-right w-20">AMT (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {invoice.items.map((it, idx) => (
+                      <tr key={idx} className="leading-tight">
+                        <td className="py-1 pr-1">
+                          <span className="font-bold block text-slate-950">{it.name}</span>
+                          {it.batchNumber && (
+                            <span className="text-[9px] text-slate-500 block">
+                              B:{it.batchNumber} {it.expiryDate ? `E:${it.expiryDate}` : ""}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-1 text-center whitespace-nowrap text-slate-700">
+                          {it.quantity} {it.unitType === "sheet" ? "sh" : "pcs"}
+                        </td>
+                        <td className="py-1 text-right font-bold whitespace-nowrap text-slate-950">
+                          {it.amount.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
               {/* Totals & Tax Breakup */}
