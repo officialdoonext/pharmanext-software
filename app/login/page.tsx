@@ -252,7 +252,7 @@ export default function LoginPage() {
         <div className="w-16 h-16 rounded-3xl overflow-hidden shadow-lg shadow-purple-500/15 flex items-center justify-center bg-white border border-slate-200/80 p-2 mb-3.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/app-icon.png"
+            src="/doonext-fav.png"
             alt="PharmaNext Logo"
             className="w-full h-full object-contain"
           />

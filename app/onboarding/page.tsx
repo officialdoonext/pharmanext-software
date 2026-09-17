@@ -116,19 +116,13 @@ export default function OnboardingPage() {
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs flex items-center justify-center bg-white border border-slate-200/80 p-1">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/app-icon.png"
-                alt="PharmaNext Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div className="flex items-center text-2xl font-black tracking-tight">
-              <span className="text-[#5E2B9D]">Pharma</span>
-              <span className="text-[#059669]">Next</span>
-            </div>
+          <div className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/header-logo.png"
+              alt="PharmaNext Logo"
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain"
+            />
           </div>
 
           {/* User Session Info & Logout */}

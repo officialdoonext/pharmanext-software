@@ -24,17 +24,20 @@ export default function TopNavbar() {
   return (
     <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs h-16">
       <div className="w-full px-3 sm:px-6 h-full flex items-center justify-between gap-2 sm:gap-4">
-        {/* Active Store Indicator with Switcher */}
+        {/* Brand Logo & Active Store Indicator with Switcher */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center text-lg sm:text-xl font-medium tracking-tight leading-none">
-              <span className="text-[#5E2B9D]">Pharma</span>
-              <span className="text-[#059669]">Next</span>
-            </div>
-            <span className="text-[10px] text-slate-400 font-medium hidden md:inline-block">
-              POS System
-            </span>
-          </div>
+          <Link
+            href={user?.role === "staff" ? "/billing" : "/medicines"}
+            className="flex items-center shrink-0 hover:opacity-90 transition-opacity"
+            title="PharmaNext"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/header-logo.png"
+              alt="PharmaNext Logo"
+              className="h-7 sm:h-8 md:h-9 w-auto object-contain"
+            />
+          </Link>
 
           {currentPharmacy && (
             <Link
