@@ -22,8 +22,7 @@ import {
   getLocalPharmacySettings,
   fetchRemotePharmacySettings,
 } from "@/lib/pharmacy-settings";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { fetchPharmacyInvoices } from "@/lib/invoice-service";
 
 export default function ReportsContent() {
   const { currentPharmacy } = useAuth();
@@ -38,9 +37,6 @@ export default function ReportsContent() {
 
   useEffect(() => {
     let isMounted = true;
-    const invKey = pharmacyId
-      ? `pharmacynext_invoices_${pharmacyId}`
-      : "pharmacynext_invoices_default";
 
     async function loadReportsData() {
       setIsLoading(true);
@@ -48,49 +44,35 @@ export default function ReportsContent() {
       if (isMounted) setSettings(st);
 
       try {
-        let invQuery;
-        if (pharmacyId) {
-          invQuery = query(collection(db, "invoices"), where("pharmacyId", "==", pharmacyId));
-        } else {
-          invQuery = collection(db, "invoices");
-        }
-        const invSnap = await getDocs(invQuery);
-        if (isMounted && !invSnap.empty) {
-          const list: BillInvoice[] = [];
-          invSnap.forEach((d) => list.push(d.data() as BillInvoice));
+        const list = await fetchPharmacyInvoices(pharmacyId);
+        if (isMounted) {
           setInvoices(list);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(invKey, JSON.stringify(list));
-          }
-        } else if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(invKey);
-          if (saved) {
-            try {
-              setInvoices(JSON.parse(saved));
-            } catch {
-              setInvoices([]);
-            }
-          }
         }
       } catch (err) {
-        if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(invKey);
-          if (saved) {
-            try {
-              setInvoices(JSON.parse(saved));
-            } catch {
-              setInvoices([]);
-            }
-          }
-        }
+        console.warn("Reports data fetch error:", err);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     }
 
     loadReportsData();
+
+    // Listen for live invoice settlements
+    const handleLiveInvoice = (e: any) => {
+      const newInv = e.detail?.invoice;
+      const targetPharmacyId = e.detail?.pharmacyId;
+      if (newInv && (!pharmacyId || targetPharmacyId === pharmacyId)) {
+        setInvoices((prev) => {
+          const filtered = prev.filter((i) => i.invoiceNo !== newInv.invoiceNo);
+          return [newInv, ...filtered];
+        });
+      }
+    };
+
+    window.addEventListener("pharmacynext_invoice_saved", handleLiveInvoice);
     return () => {
       isMounted = false;
+      window.removeEventListener("pharmacynext_invoice_saved", handleLiveInvoice);
     };
   }, [pharmacyId, currentPharmacy]);
 

@@ -37,6 +37,7 @@ import {
   fetchRemotePharmacySettings,
 } from "@/lib/pharmacy-settings";
 import BillPrintModal, { BillInvoice } from "./BillPrintModal";
+import { fetchPharmacyInvoices } from "@/lib/invoice-service";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
@@ -241,51 +242,35 @@ export default function DashboardContent() {
 
       // 2. Load Invoices
       try {
-        let invQuery;
-        if (pharmacyId) {
-          invQuery = query(collection(db, "invoices"), where("pharmacyId", "==", pharmacyId));
-        } else {
-          invQuery = collection(db, "invoices");
-        }
-        const invSnap = await getDocs(invQuery);
-        if (isMounted && !invSnap.empty) {
-          const list: BillInvoice[] = [];
-          invSnap.forEach((d) => list.push(d.data() as BillInvoice));
+        const list = await fetchPharmacyInvoices(pharmacyId);
+        if (isMounted) {
           setInvoices(list);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(invKey, JSON.stringify(list));
-          }
-        } else if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(invKey);
-          if (saved) {
-            try {
-              setInvoices(JSON.parse(saved));
-            } catch {
-              setInvoices([]);
-            }
-          } else {
-            setInvoices([]);
-          }
         }
       } catch (err) {
-        if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(invKey);
-          if (saved) {
-            try {
-              setInvoices(JSON.parse(saved));
-            } catch {
-              setInvoices([]);
-            }
-          }
-        }
+        console.warn("Dashboard invoices load error:", err);
       } finally {
         if (isMounted) setIsLoading(false);
       }
     }
 
     loadDashboardData();
+
+    // Listen for live invoice settlements
+    const handleLiveInvoice = (e: any) => {
+      const newInv = e.detail?.invoice;
+      const targetPharmacyId = e.detail?.pharmacyId;
+      if (newInv && (!pharmacyId || targetPharmacyId === pharmacyId)) {
+        setInvoices((prev) => {
+          const filtered = prev.filter((i) => i.invoiceNo !== newInv.invoiceNo);
+          return [newInv, ...filtered];
+        });
+      }
+    };
+
+    window.addEventListener("pharmacynext_invoice_saved", handleLiveInvoice);
     return () => {
       isMounted = false;
+      window.removeEventListener("pharmacynext_invoice_saved", handleLiveInvoice);
     };
   }, [pharmacyId, currentPharmacy]);
 

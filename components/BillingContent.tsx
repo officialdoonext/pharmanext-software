@@ -55,6 +55,13 @@ import {
 import { maskPhoneNumber } from "@/lib/thermal-printer";
 import BillPrintModal, { BillItem, BillInvoice } from "./BillPrintModal";
 
+import {
+  savePharmacyInvoice,
+  getInvoicesStorageKey,
+  cleanFirestoreData,
+  resolveCurrentPharmacyId,
+} from "@/lib/invoice-service";
+
 export interface DraftBill {
   id: string;
   draftNumber: string;
@@ -75,9 +82,6 @@ export interface DraftBill {
 
 const getMedicinesStorageKey = (pharmacyId?: string) =>
   pharmacyId ? `pharmacynext_medicines_${pharmacyId}` : "pharmacynext_medicines_default";
-
-const getInvoicesStorageKey = (pharmacyId?: string) =>
-  pharmacyId ? `pharmacynext_invoices_${pharmacyId}` : "pharmacynext_invoices_default";
 
 const getDraftsStorageKey = (pharmacyId?: string) =>
   pharmacyId ? `pharmacynext_drafts_${pharmacyId}` : "pharmacynext_drafts_default";
@@ -698,41 +702,28 @@ export default function BillingContent() {
       };
     });
 
-    const pharmacyId = currentPharmacy?.id;
+    const pharmacyId = resolveCurrentPharmacyId(currentPharmacy?.id);
     const medStoreKey = getMedicinesStorageKey(pharmacyId);
-    const invoicesStoreKey = getInvoicesStorageKey(pharmacyId);
 
     setMedicines(updatedMedicines);
     try {
       localStorage.setItem(medStoreKey, JSON.stringify(updatedMedicines));
     } catch {}
 
-    // Save invoice to outlet-specific localStorage history
-    try {
-      const existingInvoices = JSON.parse(localStorage.getItem(invoicesStoreKey) || "[]");
-      localStorage.setItem(
-        invoicesStoreKey,
-        JSON.stringify([newInvoice, ...existingInvoices])
-      );
-    } catch {}
+    // Save invoice to outlet-specific localStorage and Firestore
+    await savePharmacyInvoice(newInvoice, pharmacyId);
 
-    // Background Firestore Sync
+    // Sync updated medicine stocks to Firestore
     (async () => {
       try {
-        await setDoc(doc(db, "invoices", invoiceNumber), {
-          ...newInvoice,
-          pharmacyId: currentPharmacy?.id || "default",
-          createdAt: now.toISOString(),
-        });
-        // Update stock in Firestore
         for (const it of cartItems) {
           const med = updatedMedicines.find((m) => m.id === it.medicineId);
           if (med) {
-            await setDoc(doc(db, "medicines", med.id), med, { merge: true });
+            await setDoc(doc(db, "medicines", med.id), cleanFirestoreData(med), { merge: true });
           }
         }
       } catch (e) {
-        console.warn("Firestore invoice settlement note:", e);
+        console.warn("Firestore medicine stock update note:", e);
       }
     })();
 

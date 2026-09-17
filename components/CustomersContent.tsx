@@ -24,8 +24,7 @@ import {
   fetchPharmacyCustomers,
   savePharmacyCustomer,
 } from "@/lib/customer-service";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { fetchPharmacyInvoices } from "@/lib/invoice-service";
 
 export default function CustomersContent() {
   const { currentPharmacy } = useAuth();
@@ -35,8 +34,9 @@ export default function CustomersContent() {
   const [manualCustomers, setManualCustomers] = useState<CustomerRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "active" | "frequent">("all");
 
-  // Modal State
+  // Add Customer Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
@@ -45,50 +45,18 @@ export default function CustomersContent() {
   // Load pharmacy-isolated invoices and customers
   useEffect(() => {
     let isMounted = true;
-    const invKey = pharmacyId
-      ? `pharmacynext_invoices_${pharmacyId}`
-      : "pharmacynext_invoices_default";
 
     async function loadCustomerData() {
       setIsLoading(true);
 
       // 1. Invoices
       try {
-        let invQuery;
-        if (pharmacyId) {
-          invQuery = query(collection(db, "invoices"), where("pharmacyId", "==", pharmacyId));
-        } else {
-          invQuery = collection(db, "invoices");
-        }
-        const invSnap = await getDocs(invQuery);
-        if (isMounted && !invSnap.empty) {
-          const list: BillInvoice[] = [];
-          invSnap.forEach((d) => list.push(d.data() as BillInvoice));
-          setInvoices(list);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(invKey, JSON.stringify(list));
-          }
-        } else if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(invKey);
-          if (saved) {
-            try {
-              setInvoices(JSON.parse(saved));
-            } catch {
-              setInvoices([]);
-            }
-          }
+        const invList = await fetchPharmacyInvoices(pharmacyId);
+        if (isMounted) {
+          setInvoices(invList);
         }
       } catch (err) {
-        if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(invKey);
-          if (saved) {
-            try {
-              setInvoices(JSON.parse(saved));
-            } catch {
-              setInvoices([]);
-            }
-          }
-        }
+        console.warn("Invoices fetch in customers error:", err);
       }
 
       // 2. Fetch Customers via customer service
@@ -105,10 +73,18 @@ export default function CustomersContent() {
     }
 
     loadCustomerData();
+
+    // Listen for live invoice settlements to refresh customers and invoices
+    const handleLiveInvoice = () => {
+      loadCustomerData();
+    };
+
+    window.addEventListener("pharmacynext_invoice_saved", handleLiveInvoice);
     return () => {
       isMounted = false;
+      window.removeEventListener("pharmacynext_invoice_saved", handleLiveInvoice);
     };
-  }, [pharmacyId]);
+  }, [pharmacyId, currentPharmacy]);
 
   // Aggregate Customer Records from Invoices & Manual list strictly for this pharmacy
   const customerList = useMemo(() => {
