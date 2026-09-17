@@ -1,10 +1,10 @@
 import RetailLayout from "@/components/RetailLayout";
-import StaffContent from "@/components/StaffContent";
+import EmployeesContent from "@/components/EmployeesContent";
 
 export default function EmployeesPage() {
   return (
     <RetailLayout>
-      <StaffContent />
+      <EmployeesContent />
     </RetailLayout>
   );
 }
