@@ -14,23 +14,18 @@ import {
   CheckCircle2,
   Store,
   UserPlus,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { BillInvoice } from "./BillPrintModal";
+import {
+  CustomerRecord,
+  getCustomersStorageKey,
+  fetchPharmacyCustomers,
+  savePharmacyCustomer,
+} from "@/lib/customer-service";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, query, where } from "firebase/firestore";
-
-interface CustomerRecord {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  address?: string;
-  totalVisits: number;
-  totalSpent: number;
-  lastVisit: string;
-  pharmacyId?: string;
-}
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function CustomersContent() {
   const { currentPharmacy } = useAuth();
@@ -45,8 +40,7 @@ export default function CustomersContent() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newAddress, setNewAddress] = useState("");
+  const [newCity, setNewCity] = useState("");
 
   // Load pharmacy-isolated invoices and customers
   useEffect(() => {
@@ -54,9 +48,6 @@ export default function CustomersContent() {
     const invKey = pharmacyId
       ? `pharmacynext_invoices_${pharmacyId}`
       : "pharmacynext_invoices_default";
-    const custKey = pharmacyId
-      ? `pharmacynext_customers_${pharmacyId}`
-      : "pharmacynext_customers_default";
 
     async function loadCustomerData() {
       setIsLoading(true);
@@ -100,43 +91,14 @@ export default function CustomersContent() {
         }
       }
 
-      // 2. Manual Customers
+      // 2. Fetch Customers via customer service
       try {
-        let custQuery;
-        if (pharmacyId) {
-          custQuery = query(collection(db, "customers"), where("pharmacyId", "==", pharmacyId));
-        } else {
-          custQuery = collection(db, "customers");
-        }
-        const custSnap = await getDocs(custQuery);
-        if (isMounted && !custSnap.empty) {
-          const list: CustomerRecord[] = [];
-          custSnap.forEach((d) => list.push(d.data() as CustomerRecord));
-          setManualCustomers(list);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(custKey, JSON.stringify(list));
-          }
-        } else if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(custKey);
-          if (saved) {
-            try {
-              setManualCustomers(JSON.parse(saved));
-            } catch {
-              setManualCustomers([]);
-            }
-          }
+        const custList = await fetchPharmacyCustomers(pharmacyId);
+        if (isMounted) {
+          setManualCustomers(custList);
         }
       } catch (err) {
-        if (isMounted && typeof window !== "undefined") {
-          const saved = localStorage.getItem(custKey);
-          if (saved) {
-            try {
-              setManualCustomers(JSON.parse(saved));
-            } catch {
-              setManualCustomers([]);
-            }
-          }
-        }
+        console.warn("Customers fetch error:", err);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -152,7 +114,7 @@ export default function CustomersContent() {
   const customerList = useMemo(() => {
     const map = new Map<string, CustomerRecord>();
 
-    // 1. Seed from manual customers
+    // 1. Seed from registered customers
     manualCustomers.forEach((mc) => {
       const key = mc.phone.trim() || mc.id;
       map.set(key, { ...mc });
@@ -169,6 +131,7 @@ export default function CustomersContent() {
           id: `cust-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           name,
           phone,
+          city: undefined,
           totalVisits: 1,
           totalSpent: inv.grandTotal || 0,
           lastVisit: inv.date,
@@ -178,7 +141,6 @@ export default function CustomersContent() {
         const existing = map.get(key)!;
         existing.totalVisits += 1;
         existing.totalSpent += inv.grandTotal || 0;
-        // Keep most recent date
         if (inv.date) existing.lastVisit = inv.date;
       }
     });
@@ -191,45 +153,35 @@ export default function CustomersContent() {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return customerList;
     return customerList.filter(
-      (c) => c.name.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.phone && c.phone.includes(q)) ||
+        (c.city && c.city.toLowerCase().includes(q))
     );
   }, [customerList, searchQuery]);
 
   // Add Customer Handler
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!newName.trim() || !newPhone.trim()) return;
 
-    const newRecord: CustomerRecord = {
-      id: `cust-${Date.now()}`,
-      name: newName.trim(),
-      phone: newPhone.trim(),
-      email: newEmail.trim() || undefined,
-      address: newAddress.trim() || undefined,
-      totalVisits: 0,
-      totalSpent: 0,
-      lastVisit: "Never",
-      pharmacyId,
-    };
-
-    const updated = [newRecord, ...manualCustomers];
-    setManualCustomers(updated);
-
-    const custKey = pharmacyId
-      ? `pharmacynext_customers_${pharmacyId}`
-      : "pharmacynext_customers_default";
     try {
-      localStorage.setItem(custKey, JSON.stringify(updated));
-      await setDoc(doc(db, "customers", newRecord.id), newRecord);
-    } catch (err) {
-      console.warn("Customer save sync note:", err);
-    }
+      const saved = await savePharmacyCustomer(pharmacyId, {
+        name: newName,
+        phone: newPhone,
+        city: newCity,
+      });
 
-    setNewName("");
-    setNewPhone("");
-    setNewEmail("");
-    setNewAddress("");
-    setIsAddModalOpen(false);
+      // Update state immediately
+      setManualCustomers((prev) => [saved, ...prev.filter((c) => c.phone !== saved.phone)]);
+
+      setNewName("");
+      setNewPhone("");
+      setNewCity("");
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error("Failed to add customer:", err);
+    }
   };
 
   return (
@@ -246,7 +198,7 @@ export default function CustomersContent() {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Customer purchasing history and contact profiles isolated strictly to this pharmacy.
+            Customer purchasing history, contact profiles, and cities isolated strictly to this pharmacy.
           </p>
         </div>
 
@@ -294,7 +246,7 @@ export default function CustomersContent() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search customers by name or mobile number..."
+            placeholder="Search customers by name, mobile number or city..."
             className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:outline-hidden focus:border-[#5E2B9D] focus:bg-white transition-colors"
           />
         </div>
@@ -328,7 +280,8 @@ export default function CustomersContent() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-medium text-slate-500 uppercase tracking-wider">
                   <th className="py-3 px-4">Customer Name</th>
-                  <th className="py-3 px-3">Phone Number</th>
+                  <th className="py-3 px-3">Mobile Number</th>
+                  <th className="py-3 px-3">City</th>
                   <th className="py-3 px-3 text-center">Visits / Bills</th>
                   <th className="py-3 px-3 text-right">Total Spent</th>
                   <th className="py-3 px-3">Last Visit</th>
@@ -339,7 +292,17 @@ export default function CustomersContent() {
                 {filteredCustomers.map((cust) => (
                   <tr key={cust.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4 font-medium text-slate-900">{cust.name}</td>
-                    <td className="py-3.5 px-3 text-slate-600">{cust.phone || "—"}</td>
+                    <td className="py-3.5 px-3 text-slate-600 font-mono text-[11px]">{cust.phone || "—"}</td>
+                    <td className="py-3.5 px-3 text-slate-600">
+                      {cust.city ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-700">
+                          <MapPin className="w-2.5 h-2.5 text-slate-400" />
+                          {cust.city}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
                     <td className="py-3.5 px-3 text-center">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-50 text-[#5E2B9D] border border-purple-200">
                         {cust.totalVisits} visit{cust.totalVisits === 1 ? "" : "s"}
@@ -399,10 +362,11 @@ export default function CustomersContent() {
 
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Mobile Number
+                  Mobile Number *
                 </label>
                 <input
                   type="tel"
+                  required
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                   placeholder="10-digit mobile number"
@@ -412,26 +376,13 @@ export default function CustomersContent() {
 
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="customer@example.com"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:outline-hidden focus:border-[#5E2B9D] focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Address
+                  City <span className="text-slate-400 font-normal">(optional)</span>
                 </label>
                 <input
                   type="text"
-                  value={newAddress}
-                  onChange={(e) => setNewAddress(e.target.value)}
-                  placeholder="Street / City"
+                  value={newCity}
+                  onChange={(e) => setNewCity(e.target.value)}
+                  placeholder="e.g. Hyderabad / Bangalore"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:outline-hidden focus:border-[#5E2B9D] focus:bg-white"
                 />
               </div>
