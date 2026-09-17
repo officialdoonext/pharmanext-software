@@ -55,7 +55,7 @@ export default function Sidebar() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/doonext-fav.png"
+            src="/app-icon.png"
             alt="PharmaNext Logo"
             className="w-full h-full object-contain"
           />

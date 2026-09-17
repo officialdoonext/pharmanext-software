@@ -18,7 +18,14 @@ import {
   Phone,
   Eye,
   EyeOff,
+  Download,
+  ArrowDownToLine,
+  Smartphone,
+  Share,
+  PlusSquare,
+  X,
 } from "lucide-react";
+import { usePWA } from "@/components/PWAProvider";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,6 +71,27 @@ export default function LoginPage() {
   const [staffMpin, setStaffMpin] = useState("");
   const [showStaffMpin, setShowStaffMpin] = useState(false);
   const [isStaffSubmitting, setIsStaffSubmitting] = useState(false);
+
+  // PWA States
+  const { isInstallable, isInstalled, installPWA, isIOS } = usePWA();
+  const [showIosGuide, setShowIosGuide] = useState(false);
+  const [installInfoMessage, setInstallInfoMessage] = useState<string | null>(null);
+
+  const handleInstallClick = async () => {
+    setInstallInfoMessage(null);
+    if (isIOS) {
+      setShowIosGuide(true);
+      return;
+    }
+
+    const outcome = await installPWA();
+    if (outcome === "unavailable") {
+      setInstallInfoMessage(
+        "To install, click the Install App icon in your browser's address bar (top right) or add to Home Screen from your browser menu."
+      );
+      setTimeout(() => setInstallInfoMessage(null), 7000);
+    }
+  };
 
   // OTP Input Refs
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -224,7 +252,7 @@ export default function LoginPage() {
         <div className="w-16 h-16 rounded-3xl overflow-hidden shadow-lg shadow-purple-500/15 flex items-center justify-center bg-white border border-slate-200/80 p-2 mb-3.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/doonext-fav.png"
+            src="/app-icon.png"
             alt="PharmaNext Logo"
             className="w-full h-full object-contain"
           />
@@ -508,6 +536,114 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* PWA Install Action Card on Login */}
+      {!isInstalled && (
+        <div className="mt-4 w-full max-w-md z-10 animate-in fade-in slide-in-from-bottom-2">
+          <button
+            type="button"
+            onClick={handleInstallClick}
+            className="w-full p-3 rounded-2xl bg-white/90 hover:bg-white border border-purple-200/90 hover:border-purple-300 shadow-md shadow-purple-900/5 flex items-center justify-between group transition-all cursor-pointer backdrop-blur-xs card-button !h-auto !max-h-none"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5E2B9D] to-purple-600 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                <Download className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <span>Install PharmaNext App</span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-purple-100 text-[#5E2B9D]">
+                    PWA
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-500 font-normal">
+                  Install for faster access &amp; auto updates
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-purple-50 group-hover:bg-[#5E2B9D] text-[#5E2B9D] group-hover:text-white text-xs font-semibold transition-all">
+              <span>Install</span>
+              <ArrowDownToLine className="w-3.5 h-3.5" />
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Installed Badge if already opened via PWA */}
+      {isInstalled && (
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200/80 py-2 px-4 rounded-xl z-10">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span className="font-medium">PharmaNext Installed • Running as Desktop/Mobile App</span>
+        </div>
+      )}
+
+      {/* Help message if browser deferred prompt is unavailable */}
+      {installInfoMessage && (
+        <div className="mt-3 max-w-md w-full p-3 rounded-xl bg-purple-50 border border-purple-200 text-[#5E2B9D] text-xs flex items-start gap-2 z-10 animate-in fade-in">
+          <Smartphone className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex-1 leading-relaxed font-medium">{installInfoMessage}</div>
+        </div>
+      )}
+
+      {/* iOS Safari Installation Guide Modal */}
+      {showIosGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-sm w-full p-6 space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 text-[#5E2B9D] flex items-center justify-center">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Install on iOS (iPhone / iPad)</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowIosGuide(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600">
+              <div className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="w-6 h-6 rounded-full bg-purple-100 text-[#5E2B9D] font-bold flex items-center justify-center shrink-0 text-xs">
+                  1
+                </div>
+                <div>
+                  Tap the <strong className="text-slate-900">Share button</strong> (box with upward arrow <Share className="w-3.5 h-3.5 inline text-blue-600 mb-0.5" />) in Safari toolbar at the bottom.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="w-6 h-6 rounded-full bg-purple-100 text-[#5E2B9D] font-bold flex items-center justify-center shrink-0 text-xs">
+                  2
+                </div>
+                <div>
+                  Scroll down the options list and tap <strong className="text-slate-900">&quot;Add to Home Screen&quot;</strong> (<PlusSquare className="w-3.5 h-3.5 inline text-slate-700 mb-0.5" />).
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="w-6 h-6 rounded-full bg-purple-100 text-[#5E2B9D] font-bold flex items-center justify-center shrink-0 text-xs">
+                  3
+                </div>
+                <div>
+                  Tap <strong className="text-slate-900">&quot;Add&quot;</strong> in the top-right corner. The PharmaNext icon will appear on your home screen!
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowIosGuide(false)}
+              className="w-full py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

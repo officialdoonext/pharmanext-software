@@ -120,7 +120,7 @@ export default function OnboardingPage() {
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs flex items-center justify-center bg-white border border-slate-200/80 p-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/doonext-fav.png"
+                src="/app-icon.png"
                 alt="PharmaNext Logo"
                 className="w-full h-full object-contain"
               />
