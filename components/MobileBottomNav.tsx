@@ -55,15 +55,20 @@ export default function MobileBottomNav() {
   const isCustomersActive = pathname.startsWith("/customers");
   const isEmployeesActive = pathname.startsWith("/employees");
   const isStaffActive = pathname.startsWith("/staff");
-  const isReportsActive = pathname.startsWith("/reports");
   const isSettingsActive = pathname.startsWith("/settings");
 
   const isMoreActive =
     isCustomersActive ||
     isEmployeesActive ||
     isStaffActive ||
-    isReportsActive ||
     isSettingsActive;
+
+  const moreNavItems = [
+    { name: "Customer", href: "/customers", icon: Users },
+    { name: "Employees", href: "/employees", icon: BadgeCheck },
+    { name: "Staff", href: "/staff", icon: UserCog },
+    { name: "Settings", href: "/settings", icon: Settings },
+  ];
 
   return (
     <>
@@ -244,7 +249,10 @@ export default function MobileBottomNav() {
       {/* "MORE" SLIDE-UP DRAWER SHEET                                   */}
       {/* ------------------------------------------------------------- */}
       {isMoreOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-end justify-center p-2 sm:p-4 animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-end justify-center p-2 sm:p-4 animate-in fade-in duration-200"
+          onClick={() => setIsMoreOpen(false)}
+        >
           <div
             className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200/90 p-5 space-y-4 max-h-[88vh] overflow-y-auto animate-in slide-in-from-bottom-6 duration-300"
             onClick={(e) => e.stopPropagation()}
@@ -253,19 +261,7 @@ export default function MobileBottomNav() {
             <div className="flex flex-col items-center">
               <div className="w-12 h-1 bg-slate-200 rounded-full mb-3"></div>
               <div className="w-full flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-md bg-purple-50 text-[#5E2B9D] border border-purple-200 flex items-center justify-center">
-                    <Store className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-900 line-clamp-1">
-                      {currentPharmacy?.name || "Active Store"}
-                    </h3>
-                    <p className="text-[10px] text-slate-400">
-                      {currentPharmacy?.licenseNo ? `DL: ${currentPharmacy.licenseNo}` : "PharmaNext System"}
-                    </p>
-                  </div>
-                </div>
+                <h3 className="text-sm font-semibold text-slate-900">Menu</h3>
 
                 <button
                   type="button"
@@ -278,166 +274,98 @@ export default function MobileBottomNav() {
               </div>
             </div>
 
-            {/* Quick Outlets / Store Switcher Bar */}
-            <Link
-              href="/onboarding"
-              onClick={() => setIsMoreOpen(false)}
-              className="flex items-center justify-between p-3 rounded-xl bg-purple-50/60 hover:bg-purple-100/70 border border-purple-200/70 transition-colors group cursor-pointer"
+            {/* Menu Items Grid - Exact Names & Icons Only */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {moreNavItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname.startsWith(item.href);
+
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsMoreOpen(false)}
+                    className={`p-3 rounded-xl border flex items-center gap-2.5 transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-purple-50 border-[#5E2B9D] text-[#5E2B9D] shadow-xs"
+                        : "bg-slate-50/70 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        isActive
+                          ? "bg-[#5E2B9D] text-white"
+                          : "bg-white text-[#5E2B9D] border border-purple-100"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-900">
+                      {item.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Connect Thermal Printer Card */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMoreOpen(false);
+                setIsPrinterModalOpen(true);
+              }}
+              className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer text-left ${
+                connectedPrinter
+                  ? "bg-emerald-50/70 border-emerald-200 hover:bg-emerald-50"
+                  : "bg-slate-50/70 hover:bg-purple-50/50 border-slate-200/80 hover:border-purple-200"
+              }`}
             >
-              <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-[#5E2B9D] animate-pulse"></span>
-                <div>
-                  <span className="text-xs font-medium text-slate-900 group-hover:text-[#5E2B9D] transition-colors">
-                    Switch Active Store
-                  </span>
-                  <p className="text-[10px] text-slate-500">
-                    Access multi-branch pharmacy management
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    connectedPrinter
+                      ? "bg-emerald-600 text-white"
+                      : "bg-white text-[#5E2B9D] border border-purple-100"
+                  }`}
+                >
+                  <Printer className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+                    <span>Connect Printer</span>
+                    {connectedPrinter ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-100 text-emerald-800">
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 truncate max-w-[200px] leading-tight mt-0.5">
+                    {connectedPrinter ? connectedPrinter.name : "Thermal WebUSB / Bluetooth"}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#5E2B9D] transition-colors" />
-            </Link>
 
-            {/* Secondary Modules Grid */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Customers */}
-              <Link
-                href="/customers"
-                onClick={() => setIsMoreOpen(false)}
-                className={`p-3 rounded-xl border flex flex-col gap-1 transition-all group cursor-pointer ${
-                  isCustomersActive
-                    ? "bg-purple-50 border-[#5E2B9D] text-[#5E2B9D]"
-                    : "bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
-                </div>
-                <span className="text-xs font-medium mt-1">Customers</span>
-                <span className="text-[10px] text-slate-400">Patients & Ledger</span>
-              </Link>
-
-              {/* Employees */}
-              <Link
-                href="/employees"
-                onClick={() => setIsMoreOpen(false)}
-                className={`p-3 rounded-xl border flex flex-col gap-1 transition-all group cursor-pointer ${
-                  isEmployeesActive
-                    ? "bg-purple-50 border-[#5E2B9D] text-[#5E2B9D]"
-                    : "bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-purple-50 text-[#5E2B9D] flex items-center justify-center">
-                    <BadgeCheck className="w-4 h-4" />
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
-                </div>
-                <span className="text-xs font-medium mt-1">Employees</span>
-                <span className="text-[10px] text-slate-400">Payroll & Wages</span>
-              </Link>
-
-              {/* Staff Access */}
-              <Link
-                href="/staff"
-                onClick={() => setIsMoreOpen(false)}
-                className={`p-3 rounded-xl border flex flex-col gap-1 transition-all group cursor-pointer ${
-                  isStaffActive
-                    ? "bg-purple-50 border-[#5E2B9D] text-[#5E2B9D]"
-                    : "bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <UserCog className="w-4 h-4" />
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
-                </div>
-                <span className="text-xs font-medium mt-1">Staff Logins</span>
-                <span className="text-[10px] text-slate-400">Counter MPIN</span>
-              </Link>
-
-              {/* Reports */}
-              <Link
-                href="/reports"
-                onClick={() => setIsMoreOpen(false)}
-                className={`p-3 rounded-xl border flex flex-col gap-1 transition-all group cursor-pointer ${
-                  isReportsActive
-                    ? "bg-purple-50 border-[#5E2B9D] text-[#5E2B9D]"
-                    : "bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <BarChart3 className="w-4 h-4" />
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
-                </div>
-                <span className="text-xs font-medium mt-1">Reports</span>
-                <span className="text-[10px] text-slate-400">Financial Audit</span>
-              </Link>
-
-              {/* Settings */}
-              <Link
-                href="/settings"
-                onClick={() => setIsMoreOpen(false)}
-                className={`p-3 rounded-xl border flex flex-col gap-1 transition-all group cursor-pointer ${
-                  isSettingsActive
-                    ? "bg-purple-50 border-[#5E2B9D] text-[#5E2B9D]"
-                    : "bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <Settings className="w-4 h-4" />
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
-                </div>
-                <span className="text-xs font-medium mt-1">Store Settings</span>
-                <span className="text-[10px] text-slate-400">GST, Profile, DL</span>
-              </Link>
-
-              {/* Thermal Printer Toggle */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMoreOpen(false);
-                  setIsPrinterModalOpen(true);
-                }}
-                className="w-full p-3 rounded-xl border bg-slate-50/60 hover:bg-white border-slate-200/80 text-slate-700 hover:border-purple-200 flex flex-col gap-1 transition-all text-left group cursor-pointer card-button !h-auto !max-h-none"
-              >
-                <div className="w-full flex items-center justify-between">
-                  <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                    <Printer className="w-4 h-4" />
-                  </div>
-                  {connectedPrinter ? (
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
-                  )}
-                </div>
-                <span className="text-xs font-medium mt-1">Thermal Printer</span>
-                <span className="text-[10px] text-slate-400">
-                  {connectedPrinter ? "Connected" : "WebUSB / BT"}
-                </span>
-              </button>
-            </div>
+              <div className="text-xs text-[#5E2B9D] font-medium flex items-center gap-0.5 shrink-0 pl-2">
+                <span>{connectedPrinter ? "Manage" : "Setup"}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+            </button>
 
             {/* Profile & Logout Action */}
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-[#5E2B9D] text-white flex items-center justify-center text-xs font-medium">
-                  {user ? user.name.slice(0, 2).toUpperCase() : "AD"}
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "AR"}
                 </div>
-                <div>
-                  <span className="text-xs font-medium text-slate-900 block leading-tight">
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-900 leading-tight">
                     {user?.name || "Store Admin"}
                   </span>
-                  <span className="text-[10px] text-slate-400 block leading-tight capitalize">
-                    {user?.role ? `${user.role} Access` : "Administrator"}
+                  <span className="text-[10px] text-slate-400 leading-tight capitalize">
+                    {user?.role ? `${user.role} Admin` : "Store Admin"}
                   </span>
                 </div>
               </div>
