@@ -825,7 +825,7 @@ export default function DashboardContent() {
         </div>
 
         {/* Filter Pills Grid / Buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap overflow-x-auto">
+        <div className="flex items-center gap-1.5 flex-nowrap sm:flex-wrap overflow-x-auto pb-1 no-scrollbar max-w-full">
           {PERIOD_OPTIONS.map((opt) => {
             const isSelected = selectedPeriod === opt.id;
             return (
@@ -1686,7 +1686,7 @@ export default function DashboardContent() {
                 </p>
               </div>
             ) : (
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse min-w-[520px]">
                 <thead>
                   <tr className="border-b border-slate-100 text-[11px] font-medium text-slate-400 uppercase tracking-wider">
                     <th className="py-2.5 px-2">Invoice #</th>

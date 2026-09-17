@@ -239,8 +239,8 @@ export default function CustomersContent() {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs flex items-center justify-between">
-        <div className="relative flex-1 max-w-md">
+      <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -276,7 +276,7 @@ export default function CustomersContent() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-medium text-slate-500 uppercase tracking-wider">
                   <th className="py-3 px-4">Customer Name</th>

@@ -45,7 +45,7 @@ export default function Sidebar() {
   });
 
   return (
-    <aside className="w-[80px] min-w-[80px] max-w-[80px] bg-white border-r border-slate-200/80 flex flex-col justify-between shrink-0 min-h-screen select-none sticky top-0 h-screen z-40">
+    <aside className="hidden lg:flex w-[80px] min-w-[80px] max-w-[80px] bg-white border-r border-slate-200/80 flex-col justify-between shrink-0 min-h-screen select-none sticky top-0 h-screen z-40">
       {/* Top Brand Logo */}
       <div className="h-16 flex items-center justify-center border-b border-slate-100 shrink-0">
         <Link

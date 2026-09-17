@@ -10,6 +10,13 @@
   --primary-border: #D8C3F2;
 }
 
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -86,22 +93,38 @@ dialog,
 /* ==========================================================================
    CONSTRAINT 3: Max Height of Button and Input: 40px Only
    ========================================================================== */
-button,
+button:not(.bottom-nav-action),
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 select,
-.btn,
-a[role="button"] {
+.btn:not(.bottom-nav-action),
+a[role="button"]:not(.bottom-nav-action) {
   max-height: 40px !important;
   box-sizing: border-box !important;
 }
 
 /* Ensure flex/inline-flex items align nicely inside 40px max height */
-button,
-.btn,
-a[role="button"] {
+button:not(.bottom-nav-action),
+.btn:not(.bottom-nav-action),
+a[role="button"]:not(.bottom-nav-action) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Mobile Bottom Navigation Dock Styling & Exemption */
+.mobile-bottom-dock {
+  border-radius: 20px !important;
+}
+
+.bottom-nav-action {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  max-height: none !important;
+  height: 52px !important;
+  border-radius: 14px !important;
+  cursor: pointer !important;
 }
 
 /* ==========================================================================

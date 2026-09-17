@@ -310,7 +310,7 @@ export default function EmployeesContent() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200/80 rounded-md p-4 shadow-xs">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium">Total Employees</span>
@@ -431,7 +431,7 @@ export default function EmployeesContent() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[720px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-medium text-slate-500 uppercase tracking-wider">
                   <th className="py-3 px-4">Employee</th>

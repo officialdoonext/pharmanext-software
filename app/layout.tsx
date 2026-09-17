@@ -27,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sora.variable} h-full`}>
-      <body className="min-h-full flex flex-col bg-[#f8fafc] text-slate-800 antialiased font-sans">
+    <html lang="en" suppressHydrationWarning className={`${sora.variable} h-full`}>
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-[#f8fafc] text-slate-800 antialiased font-sans">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

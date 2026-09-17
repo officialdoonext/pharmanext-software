@@ -35,6 +35,7 @@ import {
   Bookmark,
   FileText,
   ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
@@ -130,6 +131,9 @@ export default function BillingContent() {
   // Saved Draft Bills state (per-pharmacy)
   const [draftBills, setDraftBills] = useState<DraftBill[]>([]);
   const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+
+  // Mobile / Tablet Tab View ('catalog' | 'cart')
+  const [mobileTab, setMobileTab] = useState<"catalog" | "cart">("catalog");
 
   // 1. Load Settings, Medicines, and Customers on mount or pharmacy change
   useEffect(() => {
@@ -753,13 +757,13 @@ export default function BillingContent() {
   return (
     <div className="space-y-5 pb-10">
       {/* Top Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0 w-full">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight break-words">
               Pharmacy Billing &amp; Point of Sale
             </h1>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#5E2B9D] border border-purple-200">
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-[#5E2B9D] border border-purple-200 shrink-0">
               Live Counter
             </span>
           </div>
@@ -768,21 +772,21 @@ export default function BillingContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button
             type="button"
             onClick={() => setIsDraftsModalOpen(true)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-md border text-xs font-medium shadow-2xs transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 rounded-md border text-xs font-medium shadow-2xs transition-all cursor-pointer ${
               draftBills.length > 0
                 ? "bg-purple-50 text-[#5E2B9D] border-purple-200 hover:bg-purple-100/70"
                 : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
             }`}
             title="View locally saved draft bills"
           >
-            <Clock className="w-4 h-4 text-[#5E2B9D]" />
+            <Clock className="w-3.5 h-3.5 text-[#5E2B9D]" />
             <span>Saved Bills</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
                 draftBills.length > 0
                   ? "bg-[#5E2B9D] text-white"
                   : "bg-slate-100 text-slate-500"
@@ -792,22 +796,60 @@ export default function BillingContent() {
             </span>
           </button>
 
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-md bg-purple-50 text-[#5E2B9D] border border-purple-100 text-xs font-medium shadow-2xs">
-            <Receipt className="w-4 h-4" />
-            <span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-md bg-purple-50 text-[#5E2B9D] border border-purple-100 text-xs font-medium shadow-2xs">
+            <Receipt className="w-3.5 h-3.5 shrink-0" />
+            <span className="hidden sm:inline">
               GST: {settings.gstEnabled ? `${settings.gstPercentage}% (CGST ${settings.cgstPercentage}% + SGST ${settings.sgstPercentage}%)` : "Disabled"}
+            </span>
+            <span className="sm:hidden">
+              GST: {settings.gstEnabled ? `${settings.gstPercentage}%` : "Off"}
             </span>
           </div>
         </div>
       </div>
 
+      {/* Mobile / Tablet Tab Switcher (Visible on < lg) */}
+      <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/80 lg:hidden text-xs font-medium gap-1 w-full min-w-0">
+        <button
+          type="button"
+          onClick={() => setMobileTab("catalog")}
+          className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            mobileTab === "catalog"
+              ? "bg-white text-slate-900 shadow-xs font-bold"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <Search className="w-3.5 h-3.5" />
+          <span>Medicines ({filteredMedicines.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab("cart")}
+          className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
+            mobileTab === "cart"
+              ? "bg-[#5E2B9D] text-white shadow-xs font-bold"
+              : "text-slate-700 hover:text-slate-900"
+          }`}
+        >
+          <ShoppingCart className="w-3.5 h-3.5" />
+          <span>Bill Cart ({cartItems.length})</span>
+          {cartItems.length > 0 && (
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+              mobileTab === "cart" ? "bg-white text-[#5E2B9D]" : "bg-[#5E2B9D] text-white"
+            }`}>
+              ₹{grandTotal.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Main Billing Grid: 12 Cols */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative w-full min-w-0 max-w-full">
         
         {/* ============================================================ */}
         {/* LEFT COLUMN: Medicines Catalog & Instant Search (7 cols)      */}
         {/* ============================================================ */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className={`${mobileTab === "cart" ? "hidden lg:block" : "block"} lg:col-span-7 space-y-4 w-full min-w-0 max-w-full`}>
           
           {/* Search Bar & Category Chips */}
           <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3">
@@ -974,18 +1016,18 @@ export default function BillingContent() {
 
             {/* Pagination Controls (24 per page) */}
             {totalPages > 1 && (
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between select-none">
-                <span className="text-[11px] text-slate-500 font-normal">
+              <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 select-none w-full min-w-0">
+                <span className="text-[11px] text-slate-500 font-normal text-center sm:text-left">
                   Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredMedicines.length)} of {filteredMedicines.length}
                 </span>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 justify-center flex-wrap sm:flex-nowrap">
                   <button
                     type="button"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(1)}
                     title="First page"
-                    className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed hidden sm:flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <ChevronsLeft className="w-3.5 h-3.5" />
                   </button>
@@ -1000,28 +1042,35 @@ export default function BillingContent() {
                     <span>Prev</span>
                   </button>
 
-                  {/* Page number buttons */}
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum = i + 1;
-                    if (totalPages > 5 && currentPage > 3) {
-                      pageNum = currentPage - 2 + i;
-                      if (pageNum > totalPages) pageNum = totalPages - (4 - i);
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        type="button"
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 rounded-md text-xs font-medium flex items-center justify-center transition-all cursor-pointer ${
-                          currentPage === pageNum
-                            ? "bg-[#5E2B9D] text-white shadow-xs"
-                            : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+                  {/* Compact page indicator on mobile */}
+                  <span className="sm:hidden px-3 py-1 bg-purple-50 text-[#5E2B9D] border border-purple-200 rounded-md text-xs font-medium">
+                    Page {currentPage} of {totalPages}
+                  </span>
+
+                  {/* Desktop / Tablet numeric buttons */}
+                  <div className="hidden sm:flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum = i + 1;
+                      if (totalPages > 5 && currentPage > 3) {
+                        pageNum = currentPage - 2 + i;
+                        if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          type="button"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-8 h-8 rounded-md text-xs font-medium flex items-center justify-center transition-all cursor-pointer ${
+                            currentPage === pageNum
+                              ? "bg-[#5E2B9D] text-white shadow-xs"
+                              : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   <button
                     type="button"
@@ -1038,7 +1087,7 @@ export default function BillingContent() {
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(totalPages)}
                     title="Last page"
-                    className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed hidden sm:flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <ChevronsRight className="w-3.5 h-3.5" />
                   </button>
@@ -1051,12 +1100,21 @@ export default function BillingContent() {
         {/* ============================================================ */}
         {/* RIGHT COLUMN: Order Summary, Cart, GST & Settle (5 cols)     */}
         {/* ============================================================ */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className={`${mobileTab === "catalog" ? "hidden lg:block" : "block"} lg:col-span-5 space-y-4 w-full min-w-0 max-w-full`}>
           
           <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-xs space-y-3 sticky top-20">
             {/* Cart Header */}
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
+                {/* Back to Catalog on Mobile */}
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("catalog")}
+                  className="lg:hidden p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                  title="Back to Medicines Catalog"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
                 <div className="w-8 h-8 rounded-md bg-purple-50 text-[#5E2B9D] border border-purple-100 flex items-center justify-center shadow-xs">
                   <ShoppingCart className="w-4 h-4" />
                 </div>
@@ -1567,6 +1625,28 @@ export default function BillingContent() {
           </div>
         </div>
       </div>
+
+      {/* Floating Jump-to-Cart Action on Mobile (When browsing Catalog with items in Cart) */}
+      {cartItems.length > 0 && mobileTab === "catalog" && (
+        <div className="fixed bottom-20 inset-x-3 sm:inset-x-8 z-30 lg:hidden flex justify-center animate-in slide-in-from-bottom-3">
+          <button
+            type="button"
+            onClick={() => setMobileTab("cart")}
+            className="w-full max-w-md px-4 py-2.5 rounded-xl bg-[#5E2B9D] hover:bg-[#4D2382] text-white shadow-lg flex items-center justify-between font-medium text-xs transition-all cursor-pointer border border-purple-300/40"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">
+                {cartItems.length}
+              </span>
+              <span>Review Bill & Settle</span>
+            </div>
+            <div className="flex items-center gap-1.5 font-bold">
+              <span>₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Add Customer Modal */}
       {isAddCustomerModalOpen && (

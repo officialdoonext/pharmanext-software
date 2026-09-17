@@ -1245,20 +1245,20 @@ export default function ProductsContent() {
             </div>
 
             {/* Pagination Controls */}
-            <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
-              <span className="text-xs text-slate-500">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 select-none w-full min-w-0">
+              <span className="text-xs text-slate-500 text-center sm:text-left">
                 Showing {filteredProducts.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0} to{" "}
                 {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} of {filteredProducts.length} medicines
                 {filteredProducts.length > ITEMS_PER_PAGE && ` (24 per page)`}
               </span>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 justify-center flex-wrap sm:flex-nowrap">
                 <button
                   type="button"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(1)}
                   aria-label="First page"
-                  className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed hidden sm:flex items-center justify-center text-xs transition-colors cursor-pointer"
                 >
                   <ChevronsLeft className="w-3.5 h-3.5" />
                 </button>
@@ -1267,41 +1267,50 @@ export default function ProductsContent() {
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   aria-label="Previous page"
-                  className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  className="h-8 px-2.5 rounded-md border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1 text-xs transition-colors cursor-pointer"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Prev</span>
                 </button>
 
-                {/* Page Number Buttons */}
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum = i + 1;
-                  if (totalPages > 5 && currentPage > 3) {
-                    pageNum = currentPage - 2 + i;
-                    if (pageNum > totalPages) pageNum = totalPages - (4 - i);
-                  }
-                  return (
-                    <button
-                      key={pageNum}
-                      type="button"
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`w-8 h-8 rounded-md text-xs font-medium flex items-center justify-center transition-all cursor-pointer ${
-                        currentPage === pageNum
-                          ? "bg-[#5E2B9D] text-white shadow-xs"
-                          : "border border-slate-200 text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                {/* Compact page indicator on mobile */}
+                <span className="sm:hidden px-3 py-1 bg-purple-50 text-[#5E2B9D] border border-purple-200 rounded-md text-xs font-medium">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                {/* Page Number Buttons on Desktop / Tablet */}
+                <div className="hidden sm:flex items-center gap-1.5">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum = i + 1;
+                    if (totalPages > 5 && currentPage > 3) {
+                      pageNum = currentPage - 2 + i;
+                      if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-md text-xs font-medium flex items-center justify-center transition-all cursor-pointer ${
+                          currentPage === pageNum
+                            ? "bg-[#5E2B9D] text-white shadow-xs"
+                            : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
 
                 <button
                   type="button"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   aria-label="Next page"
-                  className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  className="h-8 px-2.5 rounded-md border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1 text-xs transition-colors cursor-pointer"
                 >
+                  <span>Next</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
                 <button
@@ -1309,7 +1318,7 @@ export default function ProductsContent() {
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(totalPages)}
                   aria-label="Last page"
-                  className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-xs transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-md border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed hidden sm:flex items-center justify-center text-xs transition-colors cursor-pointer"
                 >
                   <ChevronsRight className="w-3.5 h-3.5" />
                 </button>
