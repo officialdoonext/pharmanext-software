@@ -270,10 +270,10 @@ export default function LoginPage() {
       {/* Main Login Card */}
       <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200/90 shadow-xl p-8 z-10 relative">
         {/* Security Shield Tag */}
-        <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-full py-1 px-3 w-fit mx-auto mb-6">
+        {/* <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-full py-1 px-3 w-fit mx-auto mb-6">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>256-Bit Encrypted Security Protocol</span>
-        </div>
+        </div> */}
 
         {/* Login Role Tabs (Admin vs Staff) */}
         <div className="grid grid-cols-2 p-1.5 bg-slate-100/90 rounded-2xl mb-6">
