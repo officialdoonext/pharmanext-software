@@ -41,11 +41,19 @@ import {
 } from "@/lib/pharmacy-settings";
 import BillPrintModal, { BillItem, BillInvoice } from "./BillPrintModal";
 
+const getMedicinesStorageKey = (pharmacyId?: string) =>
+  pharmacyId ? `pharmacynext_medicines_${pharmacyId}` : "pharmacynext_medicines_default";
+
+const getInvoicesStorageKey = (pharmacyId?: string) =>
+  pharmacyId ? `pharmacynext_invoices_${pharmacyId}` : "pharmacynext_invoices_default";
+
 export default function BillingContent() {
   const { currentPharmacy } = useAuth();
   
   // Store Settings & GST configuration
-  const [settings, setSettings] = useState<PharmacySettings>(getLocalPharmacySettings());
+  const [settings, setSettings] = useState<PharmacySettings>(() =>
+    getLocalPharmacySettings(currentPharmacy?.id, currentPharmacy || undefined)
+  );
   
   // Medicines catalog
   const [medicines, setMedicines] = useState<MedicineItem[]>([]);
@@ -75,52 +83,87 @@ export default function BillingContent() {
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
 
-  // 1. Load Settings and Dynamic Medicines on mount
+  // 1. Load Settings and Dynamic Medicines on mount or pharmacy change
   useEffect(() => {
-    async function initData() {
-      // Fetch settings
-      const st = await fetchRemotePharmacySettings(currentPharmacy?.id);
-      setSettings(st);
+    let isMounted = true;
+    const pharmacyId = currentPharmacy?.id;
+    const medStoreKey = getMedicinesStorageKey(pharmacyId);
 
-      // Fetch medicines from local or Firestore
+    async function initData() {
+      // Fetch settings strictly for current pharmacy
+      const st = await fetchRemotePharmacySettings(pharmacyId, currentPharmacy || undefined);
+      if (isMounted) {
+        setSettings(st);
+      }
+
+      // Fetch medicines strictly for current pharmacy
       setIsLoadingMedicines(true);
       try {
         let medQuery;
-        if (currentPharmacy?.id) {
+        if (pharmacyId) {
           medQuery = query(
             collection(db, "medicines"),
-            where("pharmacyId", "==", currentPharmacy.id)
+            where("pharmacyId", "==", pharmacyId)
           );
         } else {
           medQuery = collection(db, "medicines");
         }
 
         const snapshot = await getDocs(medQuery);
-        if (!snapshot.empty) {
+        if (isMounted && !snapshot.empty) {
           const fetched: MedicineItem[] = [];
           snapshot.forEach((docSnap) => fetched.push(docSnap.data() as MedicineItem));
           const clean = purgeDummyMedicines(fetched);
           setMedicines(clean);
-          localStorage.setItem("pharmacynext_medicines", JSON.stringify(clean));
-        } else {
-          const saved = localStorage.getItem("pharmacynext_medicines");
-          if (saved) {
-            setMedicines(purgeDummyMedicines(JSON.parse(saved)));
+          if (typeof window !== "undefined") {
+            localStorage.setItem(medStoreKey, JSON.stringify(clean));
+          }
+        } else if (isMounted) {
+          // Check outlet-specific local cache only
+          if (typeof window !== "undefined") {
+            const saved = localStorage.getItem(medStoreKey);
+            if (saved) {
+              try {
+                setMedicines(purgeDummyMedicines(JSON.parse(saved)));
+              } catch {
+                setMedicines([]);
+              }
+            } else {
+              setMedicines([]);
+            }
+          } else {
+            setMedicines([]);
           }
         }
       } catch (e) {
-        console.warn("Billing medicines load:", e);
-        const saved = localStorage.getItem("pharmacynext_medicines");
-        if (saved) {
-          try {
-            setMedicines(purgeDummyMedicines(JSON.parse(saved)));
-          } catch {}
+        console.warn("Billing medicines load error:", e);
+        if (isMounted) {
+          if (typeof window !== "undefined") {
+            const saved = localStorage.getItem(medStoreKey);
+            if (saved) {
+              try {
+                setMedicines(purgeDummyMedicines(JSON.parse(saved)));
+              } catch {
+                setMedicines([]);
+              }
+            } else {
+              setMedicines([]);
+            }
+          } else {
+            setMedicines([]);
+          }
         }
       } finally {
-        setIsLoadingMedicines(false);
+        if (isMounted) {
+          setIsLoadingMedicines(false);
+        }
       }
     }
     initData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentPharmacy]);
 
   // Filtered medicines list
@@ -333,6 +376,7 @@ export default function BillingContent() {
 
     const newInvoice: BillInvoice = {
       invoiceNo: invoiceNumber,
+      pharmacyId: currentPharmacy?.id || undefined,
       date: dateStr,
       time: timeStr,
       customerName: customerName.trim() || "Walk-in Customer",
@@ -403,16 +447,20 @@ export default function BillingContent() {
       };
     });
 
+    const pharmacyId = currentPharmacy?.id;
+    const medStoreKey = getMedicinesStorageKey(pharmacyId);
+    const invoicesStoreKey = getInvoicesStorageKey(pharmacyId);
+
     setMedicines(updatedMedicines);
     try {
-      localStorage.setItem("pharmacynext_medicines", JSON.stringify(updatedMedicines));
+      localStorage.setItem(medStoreKey, JSON.stringify(updatedMedicines));
     } catch {}
 
-    // Save invoice to localStorage history
+    // Save invoice to outlet-specific localStorage history
     try {
-      const existingInvoices = JSON.parse(localStorage.getItem("pharmacynext_invoices") || "[]");
+      const existingInvoices = JSON.parse(localStorage.getItem(invoicesStoreKey) || "[]");
       localStorage.setItem(
-        "pharmacynext_invoices",
+        invoicesStoreKey,
         JSON.stringify([newInvoice, ...existingInvoices])
       );
     } catch {}

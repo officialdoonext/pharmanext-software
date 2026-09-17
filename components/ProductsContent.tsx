@@ -48,6 +48,15 @@ import { useAuth } from "@/lib/auth-context";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, setDoc, deleteDoc, query, where } from "firebase/firestore";
 
+const getMedicinesStorageKey = (pharmacyId?: string) =>
+  pharmacyId ? `pharmacynext_medicines_${pharmacyId}` : "pharmacynext_medicines_default";
+
+const getCategoriesStorageKey = (pharmacyId?: string) =>
+  pharmacyId ? `pharmacynext_categories_${pharmacyId}` : "pharmacynext_categories_default";
+
+const getTypesStorageKey = (pharmacyId?: string) =>
+  pharmacyId ? `pharmacynext_types_${pharmacyId}` : "pharmacynext_types_default";
+
 export default function ProductsContent() {
   const { currentPharmacy } = useAuth();
 
@@ -55,10 +64,11 @@ export default function ProductsContent() {
   const [mainTab, setMainTab] = useState<"inventory" | "categories" | "types">("inventory");
   const [isLoadingMedicines, setIsLoadingMedicines] = useState(true);
 
-  // Master Data States (Purely dynamic, purged of all dummy items)
+  // Master Data States (Purely dynamic, scoped by pharmacyId)
   const [medicines, setMedicines] = useState<MedicineItem[]>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pharmacynext_medicines");
+      const key = getMedicinesStorageKey(currentPharmacy?.id);
+      const saved = localStorage.getItem(key);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -73,7 +83,8 @@ export default function ProductsContent() {
 
   const [categories, setCategories] = useState<MedicineCategory[]>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pharmacynext_categories");
+      const key = getCategoriesStorageKey(currentPharmacy?.id);
+      const saved = localStorage.getItem(key);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -88,7 +99,8 @@ export default function ProductsContent() {
 
   const [medicineTypes, setMedicineTypes] = useState<MedicineTypeOption[]>(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pharmacynext_types");
+      const key = getTypesStorageKey(currentPharmacy?.id);
+      const saved = localStorage.getItem(key);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -116,17 +128,20 @@ export default function ProductsContent() {
   // View Medicine Detail Modal State
   const [viewingMedicine, setViewingMedicine] = useState<MedicineItem | null>(null);
 
-  // Fetch real dynamic medicines, categories, and types from Firestore on mount
+  // Fetch real dynamic medicines, categories, and types strictly for current pharmacy
   useEffect(() => {
     let isMounted = true;
+    const pharmacyId = currentPharmacy?.id;
+    const storeKey = getMedicinesStorageKey(pharmacyId);
+
     async function fetchDynamicMasterData() {
       setIsLoadingMedicines(true);
       try {
         let medQuery;
-        if (currentPharmacy?.id) {
+        if (pharmacyId) {
           medQuery = query(
             collection(db, "medicines"),
-            where("pharmacyId", "==", currentPharmacy.id)
+            where("pharmacyId", "==", pharmacyId)
           );
         } else {
           medQuery = collection(db, "medicines");
@@ -141,15 +156,21 @@ export default function ProductsContent() {
           });
           const cleanList = purgeDummyMedicines(firestoreMeds);
           setMedicines(cleanList);
-          localStorage.setItem("pharmacynext_medicines", JSON.stringify(cleanList));
+          if (typeof window !== "undefined") {
+            localStorage.setItem(storeKey, JSON.stringify(cleanList));
+          }
         } else if (isMounted) {
-          const saved = localStorage.getItem("pharmacynext_medicines");
-          if (saved) {
-            try {
-              const clean = purgeDummyMedicines(JSON.parse(saved));
-              setMedicines(clean);
-              localStorage.setItem("pharmacynext_medicines", JSON.stringify(clean));
-            } catch {
+          // Isolated to this specific pharmacy only — never load another pharmacy's items
+          if (typeof window !== "undefined") {
+            const saved = localStorage.getItem(storeKey);
+            if (saved) {
+              try {
+                const clean = purgeDummyMedicines(JSON.parse(saved));
+                setMedicines(clean);
+              } catch {
+                setMedicines([]);
+              }
+            } else {
               setMedicines([]);
             }
           } else {
@@ -157,9 +178,16 @@ export default function ProductsContent() {
           }
         }
 
-        // Fetch dynamic categories
+        // Fetch dynamic categories strictly for current pharmacy
+        const catStoreKey = getCategoriesStorageKey(pharmacyId);
         try {
-          const catSnap = await getDocs(collection(db, "categories"));
+          let catQuery;
+          if (pharmacyId) {
+            catQuery = query(collection(db, "categories"), where("pharmacyId", "==", pharmacyId));
+          } else {
+            catQuery = collection(db, "categories");
+          }
+          const catSnap = await getDocs(catQuery);
           if (isMounted && !catSnap.empty) {
             const catList: MedicineCategory[] = [];
             catSnap.forEach((docSnap) => {
@@ -167,15 +195,35 @@ export default function ProductsContent() {
             });
             const cleanCats = purgeDummyCategories(catList);
             setCategories(cleanCats);
-            localStorage.setItem("pharmacynext_categories", JSON.stringify(cleanCats));
+            if (typeof window !== "undefined") {
+              localStorage.setItem(catStoreKey, JSON.stringify(cleanCats));
+            }
+          } else if (isMounted) {
+            if (typeof window !== "undefined") {
+              const saved = localStorage.getItem(catStoreKey);
+              if (saved) {
+                try {
+                  setCategories(purgeDummyCategories(JSON.parse(saved)));
+                } catch {
+                  setCategories([]);
+                }
+              }
+            }
           }
         } catch (catErr) {
           // fallback
         }
 
-        // Fetch dynamic medicine types
+        // Fetch dynamic medicine types strictly for current pharmacy
+        const typeStoreKey = getTypesStorageKey(pharmacyId);
         try {
-          const typeSnap = await getDocs(collection(db, "medicine_types"));
+          let typeQuery;
+          if (pharmacyId) {
+            typeQuery = query(collection(db, "medicine_types"), where("pharmacyId", "==", pharmacyId));
+          } else {
+            typeQuery = collection(db, "medicine_types");
+          }
+          const typeSnap = await getDocs(typeQuery);
           if (isMounted && !typeSnap.empty) {
             const typeList: MedicineTypeOption[] = [];
             typeSnap.forEach((docSnap) => {
@@ -183,14 +231,27 @@ export default function ProductsContent() {
             });
             const cleanTypes = purgeDummyTypes(typeList);
             setMedicineTypes(cleanTypes);
-            localStorage.setItem("pharmacynext_types", JSON.stringify(cleanTypes));
+            if (typeof window !== "undefined") {
+              localStorage.setItem(typeStoreKey, JSON.stringify(cleanTypes));
+            }
+          } else if (isMounted) {
+            if (typeof window !== "undefined") {
+              const saved = localStorage.getItem(typeStoreKey);
+              if (saved) {
+                try {
+                  setMedicineTypes(purgeDummyTypes(JSON.parse(saved)));
+                } catch {
+                  setMedicineTypes([]);
+                }
+              }
+            }
           }
         } catch (typeErr) {
           // fallback
         }
       } catch (err) {
         if (isMounted) {
-          const saved = localStorage.getItem("pharmacynext_medicines");
+          const saved = localStorage.getItem(storeKey);
           if (saved) {
             try {
               const clean = purgeDummyMedicines(JSON.parse(saved));
@@ -217,11 +278,14 @@ export default function ProductsContent() {
 
   // Master Handlers for Categories (Dynamic Firestore & LocalStorage)
   const handleAddCategory = async (newCat: MedicineCategory) => {
-    const updated = [newCat, ...categories];
+    const pharmacyId = currentPharmacy?.id;
+    const catStoreKey = getCategoriesStorageKey(pharmacyId);
+    const catWithStore = { ...newCat, pharmacyId: pharmacyId || undefined };
+    const updated = [catWithStore, ...categories];
     setCategories(updated);
     try {
-      localStorage.setItem("pharmacynext_categories", JSON.stringify(updated));
-      await setDoc(doc(db, "categories", newCat.id), newCat);
+      localStorage.setItem(catStoreKey, JSON.stringify(updated));
+      await setDoc(doc(db, "categories", newCat.id), catWithStore);
     } catch (err) {
       console.warn("Category saved locally, Firestore note:", err);
     }
@@ -229,10 +293,12 @@ export default function ProductsContent() {
 
   const handleDeleteCategory = async (id: string) => {
     if (confirm("Are you sure you want to delete this category?")) {
+      const pharmacyId = currentPharmacy?.id;
+      const catStoreKey = getCategoriesStorageKey(pharmacyId);
       const updated = categories.filter((c) => c.id !== id);
       setCategories(updated);
       try {
-        localStorage.setItem("pharmacynext_categories", JSON.stringify(updated));
+        localStorage.setItem(catStoreKey, JSON.stringify(updated));
         await deleteDoc(doc(db, "categories", id));
       } catch (err) {
         console.warn("Category deleted locally, Firestore note:", err);
@@ -241,6 +307,8 @@ export default function ProductsContent() {
   };
 
   const handleAddSubCategory = async (categoryId: string, subCategoryName: string) => {
+    const pharmacyId = currentPharmacy?.id;
+    const catStoreKey = getCategoriesStorageKey(pharmacyId);
     const updated = categories.map((c) =>
       c.id === categoryId && !c.subCategories.includes(subCategoryName)
         ? { ...c, subCategories: [...c.subCategories, subCategoryName] }
@@ -248,7 +316,7 @@ export default function ProductsContent() {
     );
     setCategories(updated);
     try {
-      localStorage.setItem("pharmacynext_categories", JSON.stringify(updated));
+      localStorage.setItem(catStoreKey, JSON.stringify(updated));
       const targetCat = updated.find((c) => c.id === categoryId);
       if (targetCat) {
         await setDoc(doc(db, "categories", categoryId), targetCat);
@@ -259,6 +327,8 @@ export default function ProductsContent() {
   };
 
   const handleDeleteSubCategory = async (categoryId: string, subCategoryName: string) => {
+    const pharmacyId = currentPharmacy?.id;
+    const catStoreKey = getCategoriesStorageKey(pharmacyId);
     const updated = categories.map((c) =>
       c.id === categoryId
         ? { ...c, subCategories: c.subCategories.filter((s) => s !== subCategoryName) }
@@ -266,7 +336,7 @@ export default function ProductsContent() {
     );
     setCategories(updated);
     try {
-      localStorage.setItem("pharmacynext_categories", JSON.stringify(updated));
+      localStorage.setItem(catStoreKey, JSON.stringify(updated));
       const targetCat = updated.find((c) => c.id === categoryId);
       if (targetCat) {
         await setDoc(doc(db, "categories", categoryId), targetCat);
@@ -278,11 +348,14 @@ export default function ProductsContent() {
 
   // Master Handlers for Medicine Types (Dynamic Firestore & LocalStorage)
   const handleAddType = async (newType: MedicineTypeOption) => {
-    const updated = [newType, ...medicineTypes];
+    const pharmacyId = currentPharmacy?.id;
+    const typeStoreKey = getTypesStorageKey(pharmacyId);
+    const typeWithStore = { ...newType, pharmacyId: pharmacyId || undefined };
+    const updated = [typeWithStore, ...medicineTypes];
     setMedicineTypes(updated);
     try {
-      localStorage.setItem("pharmacynext_types", JSON.stringify(updated));
-      await setDoc(doc(db, "medicine_types", newType.id), newType);
+      localStorage.setItem(typeStoreKey, JSON.stringify(updated));
+      await setDoc(doc(db, "medicine_types", newType.id), typeWithStore);
     } catch (err) {
       console.warn("Type saved locally, Firestore note:", err);
     }
@@ -290,10 +363,12 @@ export default function ProductsContent() {
 
   const handleDeleteType = async (id: string) => {
     if (confirm("Are you sure you want to remove this medicine type?")) {
+      const pharmacyId = currentPharmacy?.id;
+      const typeStoreKey = getTypesStorageKey(pharmacyId);
       const updated = medicineTypes.filter((t) => t.id !== id);
       setMedicineTypes(updated);
       try {
-        localStorage.setItem("pharmacynext_types", JSON.stringify(updated));
+        localStorage.setItem(typeStoreKey, JSON.stringify(updated));
         await deleteDoc(doc(db, "medicine_types", id));
       } catch (err) {
         console.warn("Type deleted locally, Firestore note:", err);
@@ -326,15 +401,17 @@ export default function ProductsContent() {
 
   // Medicine Inventory Handlers (Real Dynamic Data with Firestore & LocalStorage)
   const handleAddMedicine = async (newMed: MedicineItem) => {
+    const pharmacyId = currentPharmacy?.id;
+    const storeKey = getMedicinesStorageKey(pharmacyId);
     const medicineWithStore: MedicineItem & { pharmacyId?: string } = {
       ...newMed,
-      pharmacyId: currentPharmacy?.id || undefined,
+      pharmacyId: pharmacyId || undefined,
     };
 
     setMedicines((prev) => [medicineWithStore, ...prev]);
     try {
       const updated = [medicineWithStore, ...medicines];
-      localStorage.setItem("pharmacynext_medicines", JSON.stringify(updated));
+      localStorage.setItem(storeKey, JSON.stringify(updated));
       await setDoc(doc(db, "medicines", newMed.id), medicineWithStore);
     } catch (err) {
       console.warn("Saved locally, Firestore sync note:", err);
@@ -351,16 +428,25 @@ export default function ProductsContent() {
     newCategories: MedicineCategory[];
     newTypes: MedicineTypeOption[];
   }) => {
+    const pharmacyId = currentPharmacy?.id;
+    const catStoreKey = getCategoriesStorageKey(pharmacyId);
+    const typeStoreKey = getTypesStorageKey(pharmacyId);
+    const storeKey = getMedicinesStorageKey(pharmacyId);
+
     // 1. Sync any newly created categories
     if (newCats.length > 0) {
+      const catsWithStore = newCats.map((c) => ({
+        ...c,
+        pharmacyId: pharmacyId || undefined,
+      }));
       setCategories((prev) => {
-        const merged = [...newCats, ...prev];
+        const merged = [...catsWithStore, ...prev];
         try {
-          localStorage.setItem("pharmacynext_categories", JSON.stringify(merged));
+          localStorage.setItem(catStoreKey, JSON.stringify(merged));
         } catch {}
         return merged;
       });
-      for (const cat of newCats) {
+      for (const cat of catsWithStore) {
         try {
           await setDoc(doc(db, "categories", cat.id), cat);
         } catch (e) {
@@ -371,14 +457,18 @@ export default function ProductsContent() {
 
     // 2. Sync any newly created medicine types
     if (newTypes.length > 0) {
+      const typesWithStore = newTypes.map((t) => ({
+        ...t,
+        pharmacyId: pharmacyId || undefined,
+      }));
       setMedicineTypes((prev) => {
-        const merged = [...newTypes, ...prev];
+        const merged = [...typesWithStore, ...prev];
         try {
-          localStorage.setItem("pharmacynext_types", JSON.stringify(merged));
+          localStorage.setItem(typeStoreKey, JSON.stringify(merged));
         } catch {}
         return merged;
       });
-      for (const t of newTypes) {
+      for (const t of typesWithStore) {
         try {
           await setDoc(doc(db, "medicine_types", t.id), t);
         } catch (e) {
@@ -391,13 +481,13 @@ export default function ProductsContent() {
     if (newMeds.length > 0) {
       const medsWithStore: MedicineItem[] = newMeds.map((m) => ({
         ...m,
-        pharmacyId: currentPharmacy?.id || undefined,
+        pharmacyId: pharmacyId || undefined,
       }));
 
       setMedicines((prev) => {
         const merged = [...medsWithStore, ...prev];
         try {
-          localStorage.setItem("pharmacynext_medicines", JSON.stringify(merged));
+          localStorage.setItem(storeKey, JSON.stringify(merged));
         } catch {}
         return merged;
       });
@@ -422,7 +512,8 @@ export default function ProductsContent() {
       setSelectedIds((prev) => prev.filter((item) => item !== id));
 
       try {
-        localStorage.setItem("pharmacynext_medicines", JSON.stringify(updated));
+        const storeKey = getMedicinesStorageKey(currentPharmacy?.id);
+        localStorage.setItem(storeKey, JSON.stringify(updated));
         await deleteDoc(doc(db, "medicines", id));
       } catch (err) {
         console.warn("Deleted locally, Firestore sync note:", err);

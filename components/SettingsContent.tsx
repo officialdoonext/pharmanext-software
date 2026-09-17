@@ -28,23 +28,15 @@ import {
 
 export default function SettingsContent() {
   const { currentPharmacy } = useAuth();
-  const [settings, setSettings] = useState<PharmacySettings>(getLocalPharmacySettings());
+  const [settings, setSettings] = useState<PharmacySettings>(() =>
+    getLocalPharmacySettings(currentPharmacy?.id, currentPharmacy || undefined)
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
     async function loadSettings() {
-      const data = await fetchRemotePharmacySettings(currentPharmacy?.id);
-      // If store has registered name, prefill if empty
-      if (currentPharmacy?.name && (!data.pharmacyName || data.pharmacyName === defaultPharmacySettings.pharmacyName)) {
-        data.pharmacyName = currentPharmacy.name;
-      }
-      if (currentPharmacy?.address && (!data.address || data.address === defaultPharmacySettings.address)) {
-        data.address = currentPharmacy.address;
-      }
-      if (currentPharmacy?.phone && (!data.phone || data.phone === defaultPharmacySettings.phone)) {
-        data.phone = currentPharmacy.phone;
-      }
+      const data = await fetchRemotePharmacySettings(currentPharmacy?.id, currentPharmacy || undefined);
       setSettings(data);
     }
     loadSettings();

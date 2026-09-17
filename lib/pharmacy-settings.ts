@@ -22,12 +22,12 @@ export interface PharmacySettings {
 }
 
 export const defaultPharmacySettings: PharmacySettings = {
-  pharmacyName: "Sri Krishna Pharmacy & Healthcare",
+  pharmacyName: "Pharmacy Store",
   phone: "+91 98765 43210",
   email: "billing@pharmacynext.in",
-  address: "Shop #4, Ground Floor, Sri Sai Complex, Main Road, Hyderabad - 500001",
-  drugLicenseNo: "DL-20B/TG/2024/00192, DL-21B/TG/2024/00193",
-  pharmacistName: "Reg. Pharmacist: Siva Krishna (Reg No: 54129)",
+  address: "Main Road, Hyderabad",
+  drugLicenseNo: "DL-20B/21B",
+  pharmacistName: "Reg. Pharmacist",
   tagline: "Smart Pharmacy. Genuine Medicines. Healthy Tomorrow.",
 
   gstEnabled: true,
@@ -37,20 +37,47 @@ export const defaultPharmacySettings: PharmacySettings = {
   sgstPercentage: 6,
 };
 
-const SETTINGS_STORAGE_KEY = "pharmacynext_store_settings";
+export function getSettingsStorageKey(pharmacyId?: string): string {
+  return pharmacyId ? `pharmacynext_store_settings_${pharmacyId}` : "pharmacynext_store_settings";
+}
 
 // Retrieve settings from local cache or Firestore
-export function getLocalPharmacySettings(): PharmacySettings {
-  if (typeof window === "undefined") return defaultPharmacySettings;
+export function getLocalPharmacySettings(
+  pharmacyId?: string,
+  fallbackPharmacy?: { name?: string; phone?: string; licenseNo?: string; address?: string }
+): PharmacySettings {
+  if (typeof window === "undefined") {
+    return createInitialSettings(fallbackPharmacy);
+  }
+
   try {
-    const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    const key = getSettingsStorageKey(pharmacyId);
+    const saved = localStorage.getItem(key);
     if (saved) {
       return { ...defaultPharmacySettings, ...JSON.parse(saved) };
     }
   } catch (err) {
     console.warn("Failed to load settings from localStorage:", err);
   }
-  return defaultPharmacySettings;
+
+  return createInitialSettings(fallbackPharmacy);
+}
+
+function createInitialSettings(fallbackPharmacy?: {
+  name?: string;
+  phone?: string;
+  licenseNo?: string;
+  address?: string;
+}): PharmacySettings {
+  if (!fallbackPharmacy) return defaultPharmacySettings;
+
+  return {
+    ...defaultPharmacySettings,
+    pharmacyName: fallbackPharmacy.name || defaultPharmacySettings.pharmacyName,
+    phone: fallbackPharmacy.phone || defaultPharmacySettings.phone,
+    address: fallbackPharmacy.address || defaultPharmacySettings.address,
+    drugLicenseNo: fallbackPharmacy.licenseNo ? `DL-${fallbackPharmacy.licenseNo}` : defaultPharmacySettings.drugLicenseNo,
+  };
 }
 
 // Save settings to localStorage and Firestore
@@ -58,9 +85,11 @@ export async function savePharmacySettings(
   settings: PharmacySettings,
   pharmacyId?: string
 ): Promise<void> {
+  const key = getSettingsStorageKey(pharmacyId);
+
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+      localStorage.setItem(key, JSON.stringify(settings));
     } catch (e) {
       console.warn("LocalStorage save error:", e);
     }
@@ -76,21 +105,26 @@ export async function savePharmacySettings(
 
 // Fetch settings from Firestore on mount
 export async function fetchRemotePharmacySettings(
-  pharmacyId?: string
+  pharmacyId?: string,
+  fallbackPharmacy?: { name?: string; phone?: string; licenseNo?: string; address?: string }
 ): Promise<PharmacySettings> {
+  const key = getSettingsStorageKey(pharmacyId);
+
   try {
     const docId = pharmacyId ? `settings_${pharmacyId}` : "general_store_settings";
     const snap = await getDoc(doc(db, "store_settings", docId));
     if (snap.exists()) {
       const data = snap.data() as PharmacySettings;
-      const merged = { ...defaultPharmacySettings, ...data };
+      const initial = createInitialSettings(fallbackPharmacy);
+      const merged = { ...initial, ...data };
       if (typeof window !== "undefined") {
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+        localStorage.setItem(key, JSON.stringify(merged));
       }
       return merged;
     }
   } catch (err) {
     console.warn("Firestore settings fetch error:", err);
   }
-  return getLocalPharmacySettings();
+
+  return getLocalPharmacySettings(pharmacyId, fallbackPharmacy);
 }

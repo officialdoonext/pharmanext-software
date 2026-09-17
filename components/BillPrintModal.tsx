@@ -54,6 +54,7 @@ export interface BillInvoice {
   changeDue?: number;
   splitDetails?: { cash: number; online: number };
   transactionRef?: string;
+  pharmacyId?: string;
 }
 
 interface BillPrintModalProps {
