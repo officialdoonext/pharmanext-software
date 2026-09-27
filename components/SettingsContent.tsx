@@ -25,6 +25,11 @@ import {
   savePharmacySettings,
   fetchRemotePharmacySettings,
 } from "@/lib/pharmacy-settings";
+import {
+  ThermalPaperWidth,
+  getSavedThermalPaperWidth,
+  saveThermalPaperWidth,
+} from "@/lib/thermal-printer";
 
 export default function SettingsContent() {
   const { currentPharmacy } = useAuth();
@@ -33,6 +38,19 @@ export default function SettingsContent() {
   );
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [paperWidth, setPaperWidth] = useState<ThermalPaperWidth>("auto");
+  const [previewWidth, setPreviewWidth] = useState<"80mm" | "58mm">("80mm");
+
+  useEffect(() => {
+    setPaperWidth(getSavedThermalPaperWidth());
+  }, []);
+
+  const handlePaperWidthChange = (w: ThermalPaperWidth) => {
+    setPaperWidth(w);
+    saveThermalPaperWidth(w);
+    if (w === "58mm") setPreviewWidth("58mm");
+    else if (w === "80mm") setPreviewWidth("80mm");
+  };
 
   useEffect(() => {
     async function loadSettings() {
@@ -433,106 +451,195 @@ export default function SettingsContent() {
 
         {/* Right Column: Live Bill Header Preview (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
+          {/* Thermal Paper Size Setup Card */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">Thermal Roll Paper Size</h4>
+                <p className="text-[10px] text-slate-500">Auto-adjusts invoice layout for your printer paper roll</p>
+              </div>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-50 text-[#5E2B9D] border border-purple-200">
+                {paperWidth === "58mm" ? "2-Inch (58mm)" : paperWidth === "80mm" ? "3-Inch (80mm)" : "Auto-Fit"}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handlePaperWidthChange("auto")}
+                className={`py-2 px-2 rounded-xl text-center border transition-all cursor-pointer ${
+                  paperWidth === "auto"
+                    ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <div className="text-xs font-bold">Auto-Fit</div>
+                <div className={`text-[9px] ${paperWidth === "auto" ? "text-purple-200" : "text-slate-400"}`}>
+                  Dynamic scale
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePaperWidthChange("80mm")}
+                className={`py-2 px-2 rounded-xl text-center border transition-all cursor-pointer ${
+                  paperWidth === "80mm"
+                    ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <div className="text-xs font-bold">3" (80mm)</div>
+                <div className={`text-[9px] ${paperWidth === "80mm" ? "text-purple-200" : "text-slate-400"}`}>
+                  Desktop POS
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePaperWidthChange("58mm")}
+                className={`py-2 px-2 rounded-xl text-center border transition-all cursor-pointer ${
+                  paperWidth === "58mm"
+                    ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                <div className="text-xs font-bold">2" (58mm)</div>
+                <div className={`text-[9px] ${paperWidth === "58mm" ? "text-purple-200" : "text-slate-400"}`}>
+                  Portable/BT
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Live Preview Card */}
           <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs sticky top-24 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Eye className="w-4 h-4 text-purple-600" />
                 <h3 className="text-xs font-bold text-slate-900">
-                  Live Bill Header Preview
+                  Live Bill Preview
                 </h3>
               </div>
-              <span className="text-[10px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full font-bold">
-                Thermal &amp; A5 Bill
-              </span>
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setPreviewWidth("80mm")}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                    previewWidth === "80mm"
+                      ? "bg-[#5E2B9D] text-white shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  3" (80mm)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewWidth("58mm")}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                    previewWidth === "58mm"
+                      ? "bg-[#5E2B9D] text-white shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  2" (58mm)
+                </button>
+              </div>
             </div>
 
-            {/* Thermal Bill Mockup */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-slate-800 text-center font-mono text-[11px] shadow-inner space-y-2 select-none">
-              <div className="border-b border-dashed border-slate-300 pb-2.5">
-                <h4 className="font-extrabold text-xs text-slate-900 uppercase tracking-tight">
-                  {settings.pharmacyName || "PHARMACY NAME"}
-                </h4>
-                <p className="text-[10px] text-slate-600 mt-0.5 leading-snug">
-                  {settings.address || "Pharmacy Full Address"}
-                </p>
-                <p className="text-[10px] text-slate-600">
-                  Ph: {settings.phone} | Email: {settings.email}
-                </p>
-                {settings.drugLicenseNo && (
-                  <p className="text-[9px] text-slate-500 mt-0.5">
-                    DL: {settings.drugLicenseNo}
+            {/* Thermal Bill Mockup - Centers and auto-adjusts width based on 2-inch vs 3-inch */}
+            <div className="flex justify-center">
+              <div
+                className={`bg-slate-50 rounded-2xl border border-slate-200 text-slate-800 text-center font-mono shadow-inner space-y-2 select-none transition-all w-full ${
+                  previewWidth === "58mm"
+                    ? "max-w-[260px] p-3 text-[9.5px]"
+                    : "max-w-[360px] p-4 text-[11px]"
+                }`}
+              >
+                <div className="border-b border-dashed border-slate-300 pb-2.5">
+                  <h4 className={`font-extrabold text-slate-900 uppercase tracking-tight ${
+                    previewWidth === "58mm" ? "text-[11px]" : "text-xs"
+                  }`}>
+                    {settings.pharmacyName || "PHARMACY NAME"}
+                  </h4>
+                  <p className="text-[9.5px] text-slate-600 mt-0.5 leading-snug break-words">
+                    {settings.address || "Pharmacy Full Address"}
                   </p>
-                )}
-                {settings.gstEnabled && settings.gstNumber && (
-                  <p className="font-bold text-[10px] text-purple-900 mt-1">
-                    GSTIN: {settings.gstNumber}
+                  <p className="text-[9.5px] text-slate-600">
+                    Ph: {settings.phone} | Email: {settings.email}
                   </p>
-                )}
-              </div>
+                  {settings.drugLicenseNo && (
+                    <p className="text-[8.5px] text-slate-500 mt-0.5">
+                      DL: {settings.drugLicenseNo}
+                    </p>
+                  )}
+                  {settings.gstEnabled && settings.gstNumber && (
+                    <p className="font-bold text-[9.5px] text-purple-900 mt-1">
+                      GSTIN: {settings.gstNumber}
+                    </p>
+                  )}
+                </div>
 
-              {/* Sample item preview */}
-              <div className="py-2 border-b border-dashed border-slate-300 text-left space-y-1">
-                <div className="flex justify-between font-bold text-[10px] text-slate-700">
-                  <span>ITEM</span>
-                  <span>QTY</span>
-                  <span>AMT</span>
-                </div>
-                <div className="flex justify-between text-[10px] text-slate-600">
-                  <span>Dolo 650 Tab</span>
-                  <span>1 Sheet</span>
-                  <span>₹33.50</span>
-                </div>
-                <div className="flex justify-between text-[10px] text-slate-600">
-                  <span>Pan-D Cap</span>
-                  <span>5 Loose</span>
-                  <span>₹68.00</span>
-                </div>
-              </div>
-
-              {/* Sample Tax breakdown */}
-              <div className="pt-1 text-right space-y-0.5 text-[10px] text-slate-600">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>₹101.50</span>
-                </div>
-                {settings.gstEnabled ? (
-                  <>
-                    <div className="flex justify-between text-purple-800">
-                      <span>CGST ({settings.cgstPercentage}%):</span>
-                      <span>₹{(101.5 * (settings.cgstPercentage / 100)).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-purple-800">
-                      <span>SGST ({settings.sgstPercentage}%):</span>
-                      <span>₹{(101.5 * (settings.sgstPercentage / 100)).toFixed(2)}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex justify-between text-slate-400">
-                    <span>GST:</span>
-                    <span>Exempt / Disabled</span>
+                {/* Sample item preview */}
+                <div className="py-2 border-b border-dashed border-slate-300 text-left space-y-1">
+                  <div className="flex justify-between font-bold text-slate-700">
+                    <span style={{ width: "52%" }}>ITEM</span>
+                    <span style={{ width: "20%" }} className="text-center">QTY</span>
+                    <span style={{ width: "28%" }} className="text-right">AMT</span>
                   </div>
-                )}
-                <div className="flex justify-between font-extrabold text-xs text-slate-900 pt-1 border-t border-slate-300">
-                  <span>NET TOTAL:</span>
-                  <span>
-                    ₹
-                    {(
-                      101.5 +
-                      (settings.gstEnabled
-                        ? 101.5 * (settings.gstPercentage / 100)
-                        : 0)
-                    ).toFixed(2)}
-                  </span>
+                  <div className="flex justify-between text-slate-600">
+                    <span style={{ width: "52%" }} className="truncate">Dolo 650 Tab</span>
+                    <span style={{ width: "20%" }} className="text-center">1 Sheet</span>
+                    <span style={{ width: "28%" }} className="text-right">₹33.50</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span style={{ width: "52%" }} className="truncate">Pan-D Cap</span>
+                    <span style={{ width: "20%" }} className="text-center">5 Loose</span>
+                    <span style={{ width: "28%" }} className="text-right">₹68.00</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="pt-2 text-[9px] text-slate-400 border-t border-dashed border-slate-300">
-                <span>*** GET WELL SOON ***</span>
-                {settings.pharmacistName && (
-                  <p className="text-[8px] text-slate-400 mt-0.5">
-                    {settings.pharmacistName}
-                  </p>
-                )}
+                {/* Sample Tax breakdown */}
+                <div className="pt-1 text-right space-y-0.5 text-slate-600">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>₹101.50</span>
+                  </div>
+                  {settings.gstEnabled ? (
+                    <>
+                      <div className="flex justify-between text-purple-800">
+                        <span>CGST ({settings.cgstPercentage}%):</span>
+                        <span>₹{(101.5 * (settings.cgstPercentage / 100)).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-purple-800">
+                        <span>SGST ({settings.sgstPercentage}%):</span>
+                        <span>₹{(101.5 * (settings.sgstPercentage / 100)).toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-slate-400">
+                      <span>GST:</span>
+                      <span>Exempt / Disabled</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-extrabold text-xs text-slate-900 pt-1 border-t border-slate-300">
+                    <span>NET TOTAL:</span>
+                    <span>
+                      ₹
+                      {(
+                        101.5 +
+                        (settings.gstEnabled
+                          ? 101.5 * (settings.gstPercentage / 100)
+                          : 0)
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 text-[8.5px] text-slate-400 border-t border-dashed border-slate-300">
+                  <span>*** GET WELL SOON ***</span>
+                  {settings.pharmacistName && (
+                    <p className="text-[8px] text-slate-400 mt-0.5">
+                      {settings.pharmacistName}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

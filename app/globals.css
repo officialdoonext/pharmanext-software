@@ -287,12 +287,50 @@ textarea:disabled,
   #thermal-receipt {
     max-width: 100% !important;
     width: 100% !important;
-    min-width: 100% !important;
-    margin: 0 !important;
+    min-width: 0 !important;
+    margin: 0 auto !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 2mm !important;
-    font-size: 11px !important;
+    padding: 1.5mm 2mm !important;
+    font-size: 10.5px !important;
+    line-height: 1.25 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+  }
+
+  #thermal-receipt table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+  }
+
+  #thermal-receipt td,
+  #thermal-receipt th {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Automatic responsive font sizing for 2-inch (58mm) vs 3-inch (80mm) thermal printers */
+  @media (max-width: 65mm) {
+    #thermal-receipt {
+      font-size: 9.5px !important;
+      padding: 1mm 1.5mm !important;
+    }
+    #thermal-receipt h2 {
+      font-size: 12px !important;
+    }
+  }
+
+  @media (min-width: 65.1mm) and (max-width: 90mm) {
+    #thermal-receipt {
+      font-size: 11px !important;
+      padding: 2.5mm !important;
+    }
+    #thermal-receipt h2 {
+      font-size: 14px !important;
+    }
   }
 
   #a5-invoice {
@@ -305,6 +343,7 @@ textarea:disabled,
   }
 
   @page {
-    margin: 4mm;
+    margin: 0mm;
+    size: auto;
   }
 }

@@ -20,6 +20,9 @@ import {
   getSavedPrinter,
   printDirectToThermalPrinter,
   ConnectedPrinterInfo,
+  ThermalPaperWidth,
+  getSavedThermalPaperWidth,
+  saveThermalPaperWidth,
 } from "@/lib/thermal-printer";
 
 export interface BillItem {
@@ -83,6 +86,7 @@ export default function BillPrintModal({
   onStartNewBill,
 }: BillPrintModalProps) {
   const [printFormat, setPrintFormat] = useState<"thermal" | "a5">("thermal");
+  const [thermalPaperWidth, setThermalPaperWidth] = useState<ThermalPaperWidth>("auto");
   const [connectedPrinter, setConnectedPrinter] = useState<ConnectedPrinterInfo | null>(null);
   const [isDirectPrinting, setIsDirectPrinting] = useState(false);
   const [printStatusMessage, setPrintStatusMessage] = useState<{
@@ -93,9 +97,15 @@ export default function BillPrintModal({
   useEffect(() => {
     if (isOpen) {
       setConnectedPrinter(getSavedPrinter());
+      setThermalPaperWidth(getSavedThermalPaperWidth());
       setPrintStatusMessage(null);
     }
   }, [isOpen]);
+
+  const handlePaperWidthChange = (width: ThermalPaperWidth) => {
+    setThermalPaperWidth(width);
+    saveThermalPaperWidth(width);
+  };
 
   if (!isOpen || !invoice) return null;
 
@@ -103,7 +113,7 @@ export default function BillPrintModal({
   const handleDirectThermalPrint = async () => {
     setIsDirectPrinting(true);
     setPrintStatusMessage(null);
-    const res = await printDirectToThermalPrinter(invoice, settings);
+    const res = await printDirectToThermalPrinter(invoice, settings, thermalPaperWidth);
     setIsDirectPrinting(false);
     if (res.success) {
       setPrintStatusMessage({
@@ -144,32 +154,97 @@ export default function BillPrintModal({
       return;
     }
 
+    const pageSizeCss =
+      thermalPaperWidth === "58mm"
+        ? "58mm auto"
+        : thermalPaperWidth === "80mm"
+        ? "80mm auto"
+        : "auto";
+
+    const receiptMaxWidth =
+      thermalPaperWidth === "58mm"
+        ? "58mm"
+        : thermalPaperWidth === "80mm"
+        ? "80mm"
+        : "100%";
+
+    const receiptPadding =
+      thermalPaperWidth === "58mm"
+        ? "1.5mm 2mm"
+        : "2.5mm 3mm";
+
+    const baseFontSize =
+      thermalPaperWidth === "58mm"
+        ? "9.5px"
+        : "11px";
+
     const pageRules =
       printFormat === "thermal"
-        ? `@page { size: auto; margin: 0; }
+        ? `@page {
+             size: ${pageSizeCss};
+             margin: 0 !important;
+           }
+           *, *:before, *:after {
+             box-sizing: border-box !important;
+             -webkit-print-color-adjust: exact !important;
+             print-color-adjust: exact !important;
+           }
            html, body {
              margin: 0 !important;
              padding: 0 !important;
              width: 100% !important;
              background: #fff !important;
-             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace !important;
-             font-size: 11.5px !important;
+             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace !important;
+             font-size: ${baseFontSize} !important;
+             line-height: 1.25 !important;
              color: #000 !important;
+             -webkit-font-smoothing: antialiased;
            }
-           * { box-sizing: border-box !important; }
            #thermal-receipt {
              width: 100% !important;
-             max-width: 100% !important;
-             min-width: 100% !important;
+             max-width: ${receiptMaxWidth} !important;
+             min-width: 0 !important;
              border: none !important;
              box-shadow: none !important;
-             padding: 2mm 3mm !important;
-             margin: 0 !important;
+             padding: ${receiptPadding} !important;
+             margin: 0 auto !important;
+             word-break: break-word !important;
+             overflow-wrap: break-word !important;
            }
-           table { width: 100% !important; border-collapse: collapse !important; }
+           table {
+             width: 100% !important;
+             border-collapse: collapse !important;
+             table-layout: fixed !important;
+           }
+           th, td {
+             vertical-align: top !important;
+             padding: 1.5px 1px !important;
+             word-break: break-word !important;
+             overflow-wrap: break-word !important;
+           }
            .w-full { width: 100% !important; }
            .flex { display: flex !important; width: 100% !important; justify-content: space-between !important; }
-           .justify-between { justify-content: space-between !important; }`
+           .justify-between { justify-content: space-between !important; }
+
+           /* Auto-adjust responsive styling if printed to 2-inch roll */
+           @media print and (max-width: 65mm) {
+             html, body, #thermal-receipt {
+               font-size: 9.5px !important;
+               padding: 1.5mm !important;
+             }
+             h2 {
+               font-size: 12px !important;
+             }
+           }
+           @media print and (min-width: 65.1mm) {
+             html, body, #thermal-receipt {
+               font-size: 11px !important;
+               padding: 2.5mm !important;
+             }
+             h2 {
+               font-size: 14px !important;
+             }
+           }`
         : `@page { size: A5; margin: 6mm; }
            body { margin: 0; padding: 0; width: 100%; background: #fff; font-family: system-ui, -apple-system, sans-serif; font-size: 12px; color: #000; }
            * { box-sizing: border-box; }
@@ -275,34 +350,81 @@ export default function BillPrintModal({
 
         {/* Format Selector Bar (Hidden during Print) */}
         <div className="px-6 py-3 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 print:hidden">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-700">Print Format:</span>
-            <div className="inline-flex p-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setPrintFormat("thermal")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  printFormat === "thermal"
-                    ? "bg-[#5E2B9D] text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Receipt className="w-3.5 h-3.5" />
-                <span>Thermal (3-inch / 80mm)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrintFormat("a5")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  printFormat === "a5"
-                    ? "bg-[#5E2B9D] text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                <span>A5 Tax Invoice</span>
-              </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-700">Print Format:</span>
+              <div className="inline-flex p-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setPrintFormat("thermal")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    printFormat === "thermal"
+                      ? "bg-[#5E2B9D] text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span>Thermal Slip</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrintFormat("a5")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    printFormat === "a5"
+                      ? "bg-[#5E2B9D] text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>A5 Tax Invoice</span>
+                </button>
+              </div>
             </div>
+
+            {/* Thermal Paper Width Auto / 3-inch / 2-inch Selector */}
+            {printFormat === "thermal" && (
+              <div className="flex items-center gap-1.5 pl-2 sm:border-l sm:border-slate-300">
+                <span className="text-[11px] font-bold text-slate-600">Paper Width:</span>
+                <div className="inline-flex p-0.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => handlePaperWidthChange("auto")}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      thermalPaperWidth === "auto"
+                        ? "bg-[#5E2B9D] text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                    title="Auto-adjusts width dynamically to fit 2-inch, 3-inch or any printer page"
+                  >
+                    Auto-Fit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePaperWidthChange("80mm")}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      thermalPaperWidth === "80mm"
+                        ? "bg-[#5E2B9D] text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                    title="3-inch / 80mm standard desktop POS thermal roll"
+                  >
+                    3" (80mm)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePaperWidthChange("58mm")}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      thermalPaperWidth === "58mm"
+                        ? "bg-[#5E2B9D] text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                    title="2-inch / 58mm compact portable or bluetooth POS thermal roll"
+                  >
+                    2" (58mm)
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -363,90 +485,104 @@ export default function BillPrintModal({
         {/* Printable Area */}
         <div className="p-6 overflow-y-auto flex-1 bg-slate-50 flex justify-center">
           
-          {/* 1. THERMAL PRINT PREVIEW (80mm / 3-inch full width) */}
+          {/* 1. THERMAL PRINT PREVIEW (Auto-adjusts for 3-inch, 2-inch or custom width) */}
           {printFormat === "thermal" && (
             <div
               id="thermal-receipt"
-              className="bg-white p-4 sm:p-5 w-full max-w-[420px] border border-slate-300 shadow-md font-mono text-[11px] text-slate-900 space-y-2 select-text"
+              className={`bg-white border border-slate-300 shadow-md font-mono text-slate-900 space-y-2 select-text transition-all ${
+                thermalPaperWidth === "58mm"
+                  ? "w-full max-w-[270px] p-3 text-[10px]"
+                  : thermalPaperWidth === "80mm"
+                  ? "w-full max-w-[400px] p-4 sm:p-5 text-[11px]"
+                  : "w-full max-w-[340px] p-3.5 text-[10.5px]"
+              }`}
             >
               {/* Thermal Header */}
-              <div className="text-center border-b border-dashed border-slate-400 pb-2.5 w-full">
-                <h2 className="text-sm font-black uppercase tracking-tight text-slate-950">
+              <div className="text-center border-b border-dashed border-slate-400 pb-2 w-full">
+                <h2 className={`font-black uppercase tracking-tight text-slate-950 ${
+                  thermalPaperWidth === "58mm" ? "text-xs" : "text-sm"
+                }`}>
                   {settings.pharmacyName}
                 </h2>
                 {settings.tagline && (
-                  <p className="text-[9px] text-slate-500 italic mt-0.5">
+                  <p className="text-[9px] text-slate-500 italic mt-0.5 leading-tight">
                     {settings.tagline}
                   </p>
                 )}
-                <p className="text-[10px] text-slate-700 leading-snug mt-1">
+                <p className="text-[9.5px] text-slate-700 leading-snug mt-1 break-words">
                   {settings.address}
                 </p>
-                <p className="text-[10px] text-slate-700 mt-0.5">
+                <p className="text-[9.5px] text-slate-700 mt-0.5">
                   Ph: {settings.phone}
                 </p>
                 {settings.email && (
-                  <p className="text-[9px] text-slate-600">
+                  <p className="text-[8.5px] text-slate-600 break-words">
                     Email: {settings.email}
                   </p>
                 )}
                 {settings.drugLicenseNo && (
-                  <p className="text-[9px] text-slate-600 mt-0.5">
+                  <p className="text-[8.5px] text-slate-600 mt-0.5">
                     DL: {settings.drugLicenseNo}
                   </p>
                 )}
                 {invoice.gstEnabled && settings.gstNumber && (
-                  <p className="text-[10px] font-bold text-slate-900 mt-1">
+                  <p className="text-[9.5px] font-bold text-slate-900 mt-1">
                     GSTIN: {settings.gstNumber}
                   </p>
                 )}
-                <div className="pt-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                <div className="pt-1.5 text-[8.5px] font-bold uppercase tracking-widest text-slate-500">
                   *** CASH / RETAIL INVOICE ***
                 </div>
               </div>
 
-              {/* Invoice Metadata */}
-              <div className="text-[10px] space-y-0.5 border-b border-dashed border-slate-400 py-1.5 w-full">
-                <div className="flex justify-between w-full">
-                  <span>Bill No: <strong>{invoice.invoiceNo}</strong></span>
+              {/* Invoice Metadata - Auto-adjusting flex wrap */}
+              <div className="text-[9.5px] space-y-0.5 border-b border-dashed border-slate-400 py-1.5 w-full">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2 w-full">
+                  <span>Bill: <strong>{invoice.invoiceNo}</strong></span>
                   <span>Date: {invoice.date}</span>
                 </div>
-                <div className="flex justify-between w-full">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2 w-full">
                   <span>Time: {invoice.time}</span>
                   <span>Pay: <strong>{invoice.paymentMethod}</strong></span>
                 </div>
-                <div className="flex justify-between w-full">
-                  <span>Patient: <strong>{invoice.customerName}</strong></span>
-                  {invoice.customerPhone && <span>Mob: {maskPhoneNumber(invoice.customerPhone)}</span>}
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2 w-full">
+                  <span className="break-words">Patient: <strong>{invoice.customerName}</strong></span>
+                  {invoice.customerPhone && <span className="whitespace-nowrap">Mob: {maskPhoneNumber(invoice.customerPhone)}</span>}
                 </div>
                 {invoice.doctorName && (
-                  <div className="w-full">Dr: {invoice.doctorName}</div>
+                  <div className="w-full break-words">Dr: {invoice.doctorName}</div>
                 )}
               </div>
 
-              {/* Items Table - 100% Full Width */}
+              {/* Items Table - Proportional Column Widths (Fixed layout never overflows) */}
               <div className="border-b border-dashed border-slate-400 py-1.5 w-full">
-                <table className="w-full text-[10.5px] border-collapse">
+                <table className="w-full border-collapse table-fixed text-inherit">
                   <thead>
                     <tr className="border-b border-slate-300 font-bold">
-                      <th className="py-1 text-left">ITEM</th>
-                      <th className="py-1 text-center w-14">QTY</th>
-                      <th className="py-1 text-right w-20">AMT (₹)</th>
+                      <th className="py-1 text-left" style={{ width: thermalPaperWidth === "58mm" ? "52%" : "50%" }}>
+                        ITEM
+                      </th>
+                      <th className="py-1 text-center" style={{ width: thermalPaperWidth === "58mm" ? "20%" : "22%" }}>
+                        QTY
+                      </th>
+                      <th className="py-1 text-right" style={{ width: thermalPaperWidth === "58mm" ? "28%" : "28%" }}>
+                        AMT (₹)
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {invoice.items.map((it, idx) => (
                       <tr key={idx} className="leading-tight">
-                        <td className="py-1 pr-1">
+                        <td className="py-1 pr-1 break-words">
                           <span className="font-bold block text-slate-950">{it.name}</span>
                           {it.batchNumber && (
-                            <span className="text-[9px] text-slate-500 block">
+                            <span className="text-[8px] text-slate-500 block leading-tight">
                               B:{it.batchNumber} {it.expiryDate ? `E:${it.expiryDate}` : ""}
                             </span>
                           )}
                         </td>
                         <td className="py-1 text-center whitespace-nowrap text-slate-700">
-                          {it.quantity} {it.unitType === "sheet" ? "sh" : "pcs"}
+                          {it.quantity} {it.unitType === "sheet" ? "sh" : "pc"}
                         </td>
                         <td className="py-1 text-right font-bold whitespace-nowrap text-slate-950">
                           {it.amount.toFixed(2)}
@@ -458,92 +594,92 @@ export default function BillPrintModal({
               </div>
 
               {/* Totals & Tax Breakup */}
-              <div className="space-y-1 pt-1 text-[10px] text-slate-800">
-                <div className="flex justify-between">
+              <div className="space-y-1 pt-1 text-[9.5px] text-slate-800">
+                <div className="flex justify-between items-baseline gap-1">
                   <span>Items Total:</span>
-                  <span>₹{invoice.subtotal.toFixed(2)}</span>
+                  <span className="font-mono">₹{invoice.subtotal.toFixed(2)}</span>
                 </div>
 
                 {invoice.discountAmount > 0 && (
-                  <div className="flex justify-between text-rose-700 font-medium">
-                    <span>
+                  <div className="flex justify-between items-baseline gap-1 text-rose-700 font-medium">
+                    <span className="break-words">
                       Discount ({invoice.discountType === "percent" ? `${invoice.discountValue}%` : "Flat"}):
                     </span>
-                    <span>- ₹{invoice.discountAmount.toFixed(2)}</span>
+                    <span className="font-mono whitespace-nowrap">- ₹{invoice.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between font-medium">
+                <div className="flex justify-between items-baseline gap-1 font-medium">
                   <span>Taxable Subtotal:</span>
-                  <span>₹{invoice.taxableAmount.toFixed(2)}</span>
+                  <span className="font-mono">₹{invoice.taxableAmount.toFixed(2)}</span>
                 </div>
 
                 {invoice.gstEnabled ? (
                   <>
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between items-baseline gap-1 text-slate-600">
                       <span>CGST ({invoice.cgstPercentage}%):</span>
-                      <span>₹{invoice.cgstAmount.toFixed(2)}</span>
+                      <span className="font-mono">₹{invoice.cgstAmount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-slate-600">
+                    <div className="flex justify-between items-baseline gap-1 text-slate-600">
                       <span>SGST ({invoice.sgstPercentage}%):</span>
-                      <span>₹{invoice.sgstAmount.toFixed(2)}</span>
+                      <span className="font-mono">₹{invoice.sgstAmount.toFixed(2)}</span>
                     </div>
                   </>
                 ) : (
-                  <div className="flex justify-between text-slate-400">
+                  <div className="flex justify-between items-baseline gap-1 text-slate-400">
                     <span>GST:</span>
                     <span>Exempt</span>
                   </div>
                 )}
 
                 {invoice.roundOff !== 0 && (
-                  <div className="flex justify-between text-slate-500">
+                  <div className="flex justify-between items-baseline gap-1 text-slate-500">
                     <span>Round Off:</span>
-                    <span>{invoice.roundOff > 0 ? `+₹${invoice.roundOff}` : `-₹${Math.abs(invoice.roundOff)}`}</span>
+                    <span className="font-mono">{invoice.roundOff > 0 ? `+₹${invoice.roundOff}` : `-₹${Math.abs(invoice.roundOff)}`}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between text-xs font-black text-slate-950 pt-1.5 border-t-2 border-slate-900">
+                <div className="flex justify-between items-baseline gap-1 text-xs font-black text-slate-950 pt-1.5 border-t-2 border-slate-900">
                   <span>GRAND TOTAL:</span>
-                  <span>₹{invoice.grandTotal.toFixed(2)}</span>
+                  <span className="font-mono">₹{invoice.grandTotal.toFixed(2)}</span>
                 </div>
 
                 {/* Cash Tendered info */}
                 {invoice.paymentMethod === "Cash" && invoice.cashTendered ? (
-                  <div className="pt-1 text-[9px] text-slate-600 border-t border-slate-200 space-y-0.5">
-                    <div className="flex justify-between">
+                  <div className="pt-1 text-[8.5px] text-slate-600 border-t border-slate-200 space-y-0.5">
+                    <div className="flex justify-between items-baseline gap-1">
                       <span>Cash Tendered:</span>
-                      <span>₹{invoice.cashTendered.toFixed(2)}</span>
+                      <span className="font-mono">₹{invoice.cashTendered.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-slate-900">
+                    <div className="flex justify-between items-baseline gap-1 font-bold text-slate-900">
                       <span>Change Return:</span>
-                      <span>₹{(invoice.changeDue || 0).toFixed(2)}</span>
+                      <span className="font-mono">₹{(invoice.changeDue || 0).toFixed(2)}</span>
                     </div>
                   </div>
                 ) : null}
 
                 {invoice.paymentMethod === "Split" && invoice.splitDetails ? (
-                  <div className="pt-1 text-[9px] text-slate-600 border-t border-slate-200 space-y-0.5">
-                    <div className="flex justify-between">
+                  <div className="pt-1 text-[8.5px] text-slate-600 border-t border-slate-200 space-y-0.5">
+                    <div className="flex justify-between items-baseline gap-1">
                       <span>Cash Paid:</span>
-                      <span>₹{invoice.splitDetails.cash.toFixed(2)}</span>
+                      <span className="font-mono">₹{invoice.splitDetails.cash.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-baseline gap-1">
                       <span>Online / UPI:</span>
-                      <span>₹{invoice.splitDetails.online.toFixed(2)}</span>
+                      <span className="font-mono">₹{invoice.splitDetails.online.toFixed(2)}</span>
                     </div>
                   </div>
                 ) : null}
               </div>
 
               {/* Thermal Footer */}
-              <div className="text-center pt-3 border-t border-dashed border-slate-400 text-[9px] text-slate-500 space-y-1">
+              <div className="text-center pt-2.5 border-t border-dashed border-slate-400 text-[8.5px] text-slate-500 space-y-0.5">
                 <p className="font-bold text-slate-800">*** GET WELL SOON ***</p>
                 <p>Medicines once sold cannot be taken back or exchanged without original cash receipt.</p>
                 {settings.pharmacistName && (
-                  <p className="text-[8px] text-slate-600 pt-1">{settings.pharmacistName}</p>
+                  <p className="text-[8px] text-slate-600 pt-0.5">{settings.pharmacistName}</p>
                 )}
-                <p className="text-[8px] text-slate-400">Powered by PharmacyNext POS</p>
+                <p className="text-[7.5px] text-slate-400">Powered by PharmacyNext POS</p>
               </div>
             </div>
           )}

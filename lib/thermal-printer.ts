@@ -1,9 +1,12 @@
 "use client";
 
+export type ThermalPaperWidth = "auto" | "80mm" | "58mm";
+
 export interface ConnectedPrinterInfo {
   type: "usb" | "bluetooth" | "browser";
   name: string;
   connectedAt: string;
+  paperWidth?: ThermalPaperWidth;
 }
 
 // Helper to mask phone numbers on thermal slips (e.g. 9876543210 -> 98XXXXXX10)
@@ -21,6 +24,25 @@ export function maskPhoneNumber(phone?: string): string {
 }
 
 const PRINTER_STORAGE_KEY = "pharmacynext_connected_printer";
+export const THERMAL_PAPER_WIDTH_KEY = "pharmacynext_thermal_paper_width";
+
+export function getSavedThermalPaperWidth(): ThermalPaperWidth {
+  if (typeof window === "undefined") return "auto";
+  try {
+    const saved = localStorage.getItem(THERMAL_PAPER_WIDTH_KEY);
+    if (saved === "80mm" || saved === "58mm" || saved === "auto") {
+      return saved;
+    }
+  } catch {}
+  return "auto";
+}
+
+export function saveThermalPaperWidth(width: ThermalPaperWidth) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(THERMAL_PAPER_WIDTH_KEY, width);
+  } catch {}
+}
 
 export function getSavedPrinter(): ConnectedPrinterInfo | null {
   if (typeof window === "undefined") return null;
@@ -136,8 +158,12 @@ export async function disconnectPrinter() {
   savePrinter(null);
 }
 
-// Generate ESC/POS Binary Buffer for 80mm Thermal Receipt (Full 48-Column Width)
-export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
+// Generate ESC/POS Binary Buffer for 80mm (3-inch) or 58mm (2-inch) Thermal Receipt
+export function generateEscPosInvoice(
+  invoice: any,
+  settings: any,
+  requestedPaperWidth?: ThermalPaperWidth
+): Uint8Array {
   const encoder = new TextEncoder();
   const bytes: number[] = [];
 
@@ -150,14 +176,39 @@ export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
     bytes.push(...cmds);
   };
 
-  const LINE_WIDTH = 48;
+  const savedPrinter = getSavedPrinter();
+  let targetWidth = requestedPaperWidth || "auto";
+  if (targetWidth === "auto") {
+    const saved = getSavedThermalPaperWidth();
+    if (saved !== "auto") {
+      targetWidth = saved;
+    } else if (savedPrinter?.name && /(58|pt[-_]?210|pos[-_]?58|mtp|goojprt)/i.test(savedPrinter.name)) {
+      targetWidth = "58mm";
+    } else {
+      targetWidth = "80mm";
+    }
+  }
+
+  const is58mm = targetWidth === "58mm";
+  const LINE_WIDTH = is58mm ? 32 : 48;
 
   // Helper to format two columns spanning the exact full line width
   const formatTwoCols = (left: string, right: string, width = LINE_WIDTH) => {
-    const maxLeft = Math.max(0, width - right.length - 1);
-    const truncLeft = left.length > maxLeft ? left.slice(0, maxLeft) : left;
-    const spaces = Math.max(1, width - truncLeft.length - right.length);
-    return truncLeft + " ".repeat(spaces) + right + "\n";
+    const l = String(left || "");
+    const r = String(right || "");
+    if (l.length + r.length + 1 <= width) {
+      const spaces = width - l.length - r.length;
+      return l + " ".repeat(spaces) + r + "\n";
+    }
+    if (width <= 32) {
+      // On narrow 2-inch paper, if both don't fit on one line, wrap neatly
+      const rSpaces = Math.max(0, width - r.length);
+      return l.slice(0, width) + "\n" + " ".repeat(rSpaces) + r + "\n";
+    }
+    const maxLeft = Math.max(0, width - r.length - 1);
+    const truncLeft = l.length > maxLeft ? l.slice(0, maxLeft) : l;
+    const spaces = Math.max(1, width - truncLeft.length - r.length);
+    return truncLeft + " ".repeat(spaces) + r + "\n";
   };
 
   // 1. Initialize Printer (ESC @)
@@ -166,9 +217,15 @@ export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
   // 2. Header (Center Aligned)
   addCmd(0x1b, 0x61, 0x01); // Center
 
-  // Store Name (Bold + Double Height)
+  // Store Name
   addCmd(0x1b, 0x45, 0x01); // Bold ON
-  addCmd(0x1d, 0x21, 0x11); // Double size
+  if (is58mm) {
+    // 58mm (32 cols): Double Height (0x1d 0x21 0x01) fits up to 32 chars on single line cleanly
+    addCmd(0x1d, 0x21, 0x01);
+  } else {
+    // 80mm (48 cols): Double Size (0x1d 0x21 0x11)
+    addCmd(0x1d, 0x21, 0x11);
+  }
   addText((settings.pharmacyName || "PharmacyNext").toUpperCase() + "\n");
   addCmd(0x1d, 0x21, 0x00); // Normal size
   addCmd(0x1b, 0x45, 0x00); // Bold OFF
@@ -194,7 +251,7 @@ export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
   addCmd(0x1b, 0x61, 0x00); // Left
   addText("-".repeat(LINE_WIDTH) + "\n");
   addText(formatTwoCols(`Bill No: ${invoice.invoiceNo}`, `Date: ${invoice.date}`));
-  addText(formatTwoCols(`Time: ${invoice.time}`, `Payment: ${invoice.paymentMethod}`));
+  addText(formatTwoCols(`Time: ${invoice.time}`, `Pay: ${invoice.paymentMethod}`));
   addText(
     formatTwoCols(
       `Patient: ${invoice.customerName}`,
@@ -202,21 +259,46 @@ export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
     )
   );
   if (invoice.doctorName) {
-    addText(`Doctor:  Dr. ${invoice.doctorName}\n`);
+    addText(`Doctor: Dr. ${invoice.doctorName}\n`);
   }
   addText("-".repeat(LINE_WIDTH) + "\n");
 
-  // 4. Items Table (48 Columns Full Width: 22 chars name, 5 qty, 8 rate, 10 amt)
-  addText("Item                     Qty     Rate        Amt\n");
-  addText("-".repeat(LINE_WIDTH) + "\n");
+  // 4. Items Table
+  if (is58mm) {
+    // 32-col layout:
+    // Item (13) + Qty (4) + Rate (6) + Amt (6) + 3 spaces = 32
+    addText("Item          Qty   Rate    Amt\n");
+    addText("-".repeat(LINE_WIDTH) + "\n");
 
-  for (const item of invoice.items || []) {
-    const rawName = item.name || "Item";
-    const nameStr = rawName.length > 22 ? rawName.slice(0, 21) + "." : rawName.padEnd(22, " ");
-    const qtyStr = String(item.quantity).padStart(5, " ");
-    const rateStr = Number(item.rate).toFixed(2).padStart(8, " ");
-    const amtStr = Number(item.amount).toFixed(2).padStart(10, " ");
-    addText(`${nameStr} ${qtyStr} ${rateStr} ${amtStr}\n`);
+    for (const item of invoice.items || []) {
+      const rawName = String(item.name || "Item").trim();
+      const qtyStr = String(item.quantity).padStart(4, " ");
+      const rateStr = Number(item.rate).toFixed(2).padStart(6, " ");
+      const amtStr = Number(item.amount).toFixed(2).padStart(6, " ");
+
+      if (rawName.length > 13) {
+        // Line 1: Full item name (up to 32 chars)
+        addText(rawName.slice(0, 32) + "\n");
+        // Line 2: right aligned Qty, Rate, Amt
+        addText(" ".repeat(13) + " " + qtyStr + " " + rateStr + " " + amtStr + "\n");
+      } else {
+        const nameStr = rawName.padEnd(13, " ");
+        addText(`${nameStr} ${qtyStr} ${rateStr} ${amtStr}\n`);
+      }
+    }
+  } else {
+    // 48-col layout (80mm):
+    addText("Item                     Qty     Rate        Amt\n");
+    addText("-".repeat(LINE_WIDTH) + "\n");
+
+    for (const item of invoice.items || []) {
+      const rawName = String(item.name || "Item").trim();
+      const nameStr = rawName.length > 22 ? rawName.slice(0, 21) + "." : rawName.padEnd(22, " ");
+      const qtyStr = String(item.quantity).padStart(5, " ");
+      const rateStr = Number(item.rate).toFixed(2).padStart(8, " ");
+      const amtStr = Number(item.amount).toFixed(2).padStart(10, " ");
+      addText(`${nameStr} ${qtyStr} ${rateStr} ${amtStr}\n`);
+    }
   }
 
   addText("-".repeat(LINE_WIDTH) + "\n");
@@ -267,7 +349,8 @@ export function generateEscPosInvoice(invoice: any, settings: any): Uint8Array {
 // Send ESC/POS Bytes Directly to Connected Hardware Printer
 export async function printDirectToThermalPrinter(
   invoice: any,
-  settings: any
+  settings: any,
+  requestedPaperWidth?: ThermalPaperWidth
 ): Promise<{ success: boolean; error?: string }> {
   const savedPrinter = getSavedPrinter();
   if (!savedPrinter) {
@@ -277,7 +360,8 @@ export async function printDirectToThermalPrinter(
     };
   }
 
-  const data = generateEscPosInvoice(invoice, settings);
+  const effectiveWidth = requestedPaperWidth || savedPrinter.paperWidth || getSavedThermalPaperWidth();
+  const data = generateEscPosInvoice(invoice, settings, effectiveWidth);
 
   // 1. Try WebUSB transmission
   if (savedPrinter.type === "usb") {

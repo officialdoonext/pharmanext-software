@@ -18,6 +18,10 @@ import {
   connectWebUsbPrinter,
   connectWebBluetoothPrinter,
   disconnectPrinter,
+  ThermalPaperWidth,
+  getSavedThermalPaperWidth,
+  saveThermalPaperWidth,
+  savePrinter,
 } from "@/lib/thermal-printer";
 
 interface PrinterConnectModalProps {
@@ -32,6 +36,7 @@ export default function PrinterConnectModal({
   onPrinterChanged,
 }: PrinterConnectModalProps) {
   const [currentPrinter, setCurrentPrinter] = useState<ConnectedPrinterInfo | null>(null);
+  const [paperWidth, setPaperWidth] = useState<ThermalPaperWidth>("auto");
   const [isConnecting, setIsConnecting] = useState<"usb" | "bluetooth" | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -39,10 +44,23 @@ export default function PrinterConnectModal({
   useEffect(() => {
     if (isOpen) {
       setCurrentPrinter(getSavedPrinter());
+      setPaperWidth(getSavedThermalPaperWidth());
       setErrorMessage(null);
       setSuccessMessage(null);
     }
   }, [isOpen]);
+
+  const handlePaperWidthChange = (w: ThermalPaperWidth) => {
+    setPaperWidth(w);
+    saveThermalPaperWidth(w);
+    const saved = getSavedPrinter();
+    if (saved) {
+      const updated = { ...saved, paperWidth: w };
+      savePrinter(updated);
+      setCurrentPrinter(updated);
+      onPrinterChanged?.(updated);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -208,6 +226,64 @@ export default function PrinterConnectModal({
               </span>
             )}
           </button>
+        </div>
+
+        {/* Paper Size / Width Selection */}
+        <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <span className="text-xs font-bold text-slate-800">Thermal Roll Width</span>
+              <p className="text-[10px] text-slate-500">Auto-adjusts invoice layout for your printer paper size</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-[#5E2B9D]">
+              {paperWidth === "58mm" ? "2-Inch (58mm)" : paperWidth === "80mm" ? "3-Inch (80mm)" : "Auto-Fit"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handlePaperWidthChange("auto")}
+              className={`p-2 rounded-lg text-center border transition-all cursor-pointer ${
+                paperWidth === "auto"
+                  ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <div className="text-xs font-bold">Auto-Fit</div>
+              <div className={`text-[9px] ${paperWidth === "auto" ? "text-purple-200" : "text-slate-400"}`}>
+                Auto detect
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePaperWidthChange("80mm")}
+              className={`p-2 rounded-lg text-center border transition-all cursor-pointer ${
+                paperWidth === "80mm"
+                  ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <div className="text-xs font-bold">3" (80mm)</div>
+              <div className={`text-[9px] ${paperWidth === "80mm" ? "text-purple-200" : "text-slate-400"}`}>
+                Desktop POS
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePaperWidthChange("58mm")}
+              className={`p-2 rounded-lg text-center border transition-all cursor-pointer ${
+                paperWidth === "58mm"
+                  ? "bg-[#5E2B9D] text-white border-[#5E2B9D] shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <div className="text-xs font-bold">2" (58mm)</div>
+              <div className={`text-[9px] ${paperWidth === "58mm" ? "text-purple-200" : "text-slate-400"}`}>
+                Portable/BT
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Footer info note */}
